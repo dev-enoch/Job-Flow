@@ -12,6 +12,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { format } from "date-fns";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { MotiView } from "moti";
 import Text from "../../../components/ui/Text";
 import Card from "../../../components/ui/Card";
 import Button from "../../../components/ui/Button";
@@ -35,8 +36,8 @@ import {
 import StatusSelector from "../../../components/jobs/StatusSelector";
 import { ThemeColors } from "../../../constants/colors";
 import DeleteJobDialogue from "../../../components/DeleteJobModal";
-import Toast from "react-native-toast-message";
 import { useJobs } from "../../../context/jobContext";
+import logger from "../../../utils/logger";
 
 export default function JobDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -59,7 +60,7 @@ export default function JobDetails() {
           router.back();
         }
       } catch (error) {
-        console.error("Error loading job:", error);
+        logger.error("Error loading job:", error);
       } finally {
         setLoading(false);
       }
@@ -80,7 +81,7 @@ export default function JobDetails() {
       await handleUpdateJob(updatedJob);
       setJob(updatedJob);
     } catch (error) {
-      console.error("Error updating job status:", error);
+      logger.error("Error updating job status:", error);
       Alert.alert("Error", "Failed to update status");
     }
   };
@@ -121,7 +122,12 @@ export default function JobDetails() {
         contentContainerStyle={styles.contentContainer}
       >
         {/* Header Section */}
-        <View style={styles.header}>
+        <MotiView
+          from={{ opacity: 0, translateY: -20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: "timing", duration: 500 }}
+          style={styles.header}
+        >
           <View style={styles.headerContent}>
             <Text variant="h2" weight="bold" style={styles.title}>
               {job.role}
@@ -129,96 +135,107 @@ export default function JobDetails() {
             <StatusPill status={job.status} style={styles.statusBadge} />
           </View>
           <Text style={styles.companyName}>{job.company}</Text>
-        </View>
+        </MotiView>
 
         {/* Main Content Card */}
-        <Card style={styles.mainCard}>
-          <View style={styles.section}>
-            <DetailRow
-              icon={<Building2 size={18} color={theme.text.secondary} />}
-              label="Company"
-              value={job.company}
-            />
-            <DetailRow
-              icon={<MapPin size={18} color={theme.text.secondary} />}
-              label="Location"
-              value={job.location}
-            />
-            {job.salary && (
+        <MotiView
+          from={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: "spring", delay: 100, damping: 17 }}
+        >
+          <Card style={styles.mainCard}>
+            <View style={styles.section}>
               <DetailRow
-                icon={<DollarSign size={18} color={theme.text.secondary} />}
-                label="Salary"
-                value={job.salary}
+                icon={<Building2 size={18} color={theme.text.secondary} />}
+                label="Company"
+                value={job.company}
               />
-            )}
-            <DetailRow
-              icon={<Calendar size={18} color={theme.text.secondary} />}
-              label="Applied Date"
-              value={format(new Date(job.dateApplied), "MMMM d, yyyy")}
-            />
-            {job.url && (
               <DetailRow
-                icon={<Globe size={18} color={theme.text.secondary} />}
-                label="Job Posting"
-                value={job.url}
-                isLink
-                onPress={() => handleOpenURL(job.url)}
+                icon={<MapPin size={18} color={theme.text.secondary} />}
+                label="Location"
+                value={job.location}
               />
-            )}
-          </View>
-
-          {/* Contact Section */}
-          {(job.contactPerson || job.contactEmail) && (
-            <View style={[styles.section, styles.sectionWithBorder]}>
-              <Text variant="h4" weight="medium" style={styles.sectionTitle}>
-                Contact Information
-              </Text>
-              {job.contactPerson && (
+              {job.salary && (
                 <DetailRow
-                  icon={<User size={18} color={theme.text.secondary} />}
-                  label="Contact Person"
-                  value={job.contactPerson}
+                  icon={<DollarSign size={18} color={theme.text.secondary} />}
+                  label="Salary"
+                  value={job.salary}
                 />
               )}
-              {job.contactEmail && (
+              <DetailRow
+                icon={<Calendar size={18} color={theme.text.secondary} />}
+                label="Applied Date"
+                value={format(new Date(job.dateApplied), "MMMM d, yyyy")}
+              />
+              {job.url && (
                 <DetailRow
-                  icon={<Mail size={18} color={theme.text.secondary} />}
-                  label="Email"
-                  value={job.contactEmail}
+                  icon={<Globe size={18} color={theme.text.secondary} />}
+                  label="Job Posting"
+                  value={job.url}
                   isLink
-                  onPress={() => Linking.openURL(`mailto:${job.contactEmail}`)}
+                  onPress={() => handleOpenURL(job.url)}
                 />
               )}
             </View>
-          )}
 
-          {/* Follow Up Section */}
-          {job.followUpDate && (
-            <View style={[styles.section, styles.sectionWithBorder]}>
-              <Text variant="h4" weight="medium" style={styles.sectionTitle}>
-                Follow Up
-              </Text>
-              <DetailRow
-                icon={<Clock size={18} color={theme.text.secondary} />}
-                label="Scheduled Date"
-                value={format(new Date(job.followUpDate), "MMMM d, yyyy")}
-              />
-            </View>
-          )}
+            {/* Contact Section */}
+            {(job.contactPerson || job.contactEmail) && (
+              <View style={[styles.section, styles.sectionWithBorder]}>
+                <Text variant="h4" weight="medium" style={styles.sectionTitle}>
+                  Contact Information
+                </Text>
+                {job.contactPerson && (
+                  <DetailRow
+                    icon={<User size={18} color={theme.text.secondary} />}
+                    label="Contact Person"
+                    value={job.contactPerson}
+                  />
+                )}
+                {job.contactEmail && (
+                  <DetailRow
+                    icon={<Mail size={18} color={theme.text.secondary} />}
+                    label="Email"
+                    value={job.contactEmail}
+                    isLink
+                    onPress={() => Linking.openURL(`mailto:${job.contactEmail}`)}
+                  />
+                )}
+              </View>
+            )}
 
-          {/* Notes Section */}
-          {job.notes && (
-            <View style={[styles.section, styles.sectionWithBorder]}>
-              <Text variant="h4" weight="medium" style={styles.sectionTitle}>
-                Notes
-              </Text>
-              <Text style={styles.notesText}>{job.notes}</Text>
-            </View>
-          )}
-        </Card>
+            {/* Follow Up Section */}
+            {job.followUpDate && (
+              <View style={[styles.section, styles.sectionWithBorder]}>
+                <Text variant="h4" weight="medium" style={styles.sectionTitle}>
+                  Follow Up
+                </Text>
+                <DetailRow
+                  icon={<Clock size={18} color={theme.text.secondary} />}
+                  label="Scheduled Date"
+                  value={format(new Date(job.followUpDate), "MMMM d, yyyy")}
+                />
+              </View>
+            )}
+
+            {/* Notes Section */}
+            {job.notes && (
+              <View style={[styles.section, styles.sectionWithBorder]}>
+                <Text variant="h4" weight="medium" style={styles.sectionTitle}>
+                  Notes
+                </Text>
+                <Text style={styles.notesText}>{job.notes}</Text>
+              </View>
+            )}
+          </Card>
+        </MotiView>
 
         {/* Status Update Section */}
-        <View style={styles.statusSection}>
+        <MotiView
+          from={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: "timing", delay: 200, duration: 400 }}
+          style={styles.statusSection}
+        >
           <Text variant="h4" weight="medium" style={styles.sectionTitle}>
             Update Application Status
           </Text>
@@ -226,10 +243,15 @@ export default function JobDetails() {
             currentStatus={job.status}
             onSelect={handleUpdateStatus}
           />
-        </View>
+        </MotiView>
 
         {/* Action Buttons */}
-        <View style={styles.actionsContainer}>
+        <MotiView
+          from={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: "timing", delay: 300, duration: 400 }}
+          style={styles.actionsContainer}
+        >
           <Button
             title="Edit Details"
             variant="outline"
@@ -246,7 +268,7 @@ export default function JobDetails() {
             style={[styles.actionButton, styles.deleteButton]}
             onPress={() => setDeleteJobModalVisible(true)}
           />
-        </View>
+        </MotiView>
       </ScrollView>
       <DeleteJobDialogue
         visible={deleteJobModalVisible}

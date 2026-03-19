@@ -6,6 +6,7 @@ import Text from "../../components/ui/Text";
 import { JobApplication } from "../../types/jobs";
 import { useRouter } from "expo-router";
 import { useTheme } from "../../context/themeContext";
+import { MotiView } from "moti";
 
 interface UpcomingRemindersProps {
   jobs: JobApplication[];
@@ -32,48 +33,60 @@ export default function UpcomingReminders({ jobs }: UpcomingRemindersProps) {
   };
 
   return (
-    <Card variant="elevated" style={styles.card}>
-      <View style={styles.header}>
-        <Text variant="h3" weight="bold">
-          Upcoming Follow-ups
-        </Text>
-        <TouchableOpacity onPress={handleViewAll} style={styles.viewAll}>
-          <Text color="primary" weight="medium">
-            View all
+    <MotiView
+      from={{ opacity: 0, translateY: 15 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ duration: 600, delay: 500 }}
+    >
+      <Card variant="elevated" style={styles.card}>
+        <View style={styles.header}>
+          <Text variant="h3" weight="bold">
+            Upcoming Follow-ups
           </Text>
-          <ChevronRight size={16} color={theme.primary} />
-        </TouchableOpacity>
-      </View>
-
-      {jobsWithFollowUps.length > 0 ? (
-        jobsWithFollowUps.map((job) => (
-          <TouchableOpacity
-            key={job.id}
-            style={styles.reminderItem}
-            onPress={() => router.push(`/(modals)/job/${job.id}`)}
-          >
-            <View style={styles.reminderIcon}>
-              <Bell size={18} color={theme.primary} />
-            </View>
-            <View style={styles.reminderContent}>
-              <Text weight="medium" numberOfLines={1}>
-                {job.role} at {job.company}
-              </Text>
-              <Text variant="label" color="secondary">
-                Follow up on{" "}
-                {format(new Date(job.followUpDate!), "MMM d, yyyy")}
-              </Text>
-            </View>
+          <TouchableOpacity onPress={handleViewAll} style={styles.viewAll}>
+            <Text color="primary" weight="medium">
+              View all
+            </Text>
+            <ChevronRight size={16} color={theme.primary} />
           </TouchableOpacity>
-        ))
-      ) : (
-        <View style={styles.emptyState}>
-          <Text color="secondary" style={styles.emptyText}>
-            No upcoming follow-ups scheduled.
-          </Text>
         </View>
-      )}
-    </Card>
+
+        {jobsWithFollowUps.length > 0 ? (
+          jobsWithFollowUps.map((job, index) => (
+            <MotiView
+              key={job.id}
+              from={{ opacity: 0, translateX: -20 }}
+              animate={{ opacity: 1, translateX: 0 }}
+              transition={{ delay: 600 + index * 150, type: "spring", damping: 14 }}
+            >
+              <TouchableOpacity
+                style={styles.reminderItem}
+                onPress={() => router.push(`/(modals)/job/${job.id}`)}
+              >
+                <View style={styles.reminderIcon}>
+                  <Bell size={18} color={theme.primary} />
+                </View>
+                <View style={styles.reminderContent}>
+                  <Text weight="medium" numberOfLines={1}>
+                    {job.role} at {job.company}
+                  </Text>
+                  <Text variant="label" color="secondary">
+                    Follow up on{" "}
+                    {format(new Date(job.followUpDate!), "MMM d, yyyy")}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </MotiView>
+          ))
+        ) : (
+          <View style={styles.emptyState}>
+            <Text color="secondary" style={styles.emptyText}>
+              No upcoming follow-ups scheduled.
+            </Text>
+          </View>
+        )}
+      </Card>
+    </MotiView>
   );
 }
 

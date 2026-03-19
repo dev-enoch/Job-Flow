@@ -21,11 +21,14 @@ import {
   MessageSquarePlus,
   Moon,
   Lock,
+  Star,
+  CheckCircle,
 } from "lucide-react-native";
 import { useState } from "react";
 import Card from "../../components/ui/Card";
 import { useTheme } from "../../context/themeContext";
 import { Link, useRouter } from "expo-router";
+import { MotiView } from "moti";
 import { ThemeColors } from "../../constants/colors";
 import { useAuth } from "../../context/authContext";
 import LogoutDialog from "../../components/logout-modal";
@@ -82,7 +85,7 @@ export default function SettingsScreen() {
   const styles = createStyles(theme);
   const [notifications, setNotifications] = useState(true);
   const router = useRouter();
-  const { signOut, loading, signIn, user } = useAuth();
+  const { signOut, loading, signIn, user, isPremium, upgradeToPremium } = useAuth();
 
   const [logutDialogue, setLogoutDialogue] = useState(false);
 
@@ -95,198 +98,253 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView style={styles.content}>
-        <Card variant="elevated" style={styles.profileCard}>
-          <View style={styles.profileHeader}>
-            {loading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color={theme.primary} />
-                <Text style={styles.loadingText}>Loading profile...</Text>
-              </View>
-            ) : user ? (
-              <>
-                <Image
-                  source={{
-                    uri:
-                      user.photo ||
-                      "https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg",
-                  }}
-                  style={styles.avatar}
-                />
-                <View style={styles.profileInfo}>
-                  <Text variant="h3" weight="bold" style={styles.name}>
-                    {user.name}
-                  </Text>
-                  <Text color="secondary" style={styles.email}>
-                    {user.email}
-                  </Text>
-                </View>
-              </>
-            ) : (
-              <View style={styles.loginContainer}>
-                <Text variant="body" style={styles.loginText}>
-                  You're not logged in.
-                </Text>
-                <Button
-                  title="Continue with Google"
-                  variant="primary"
-                  onPress={signIn}
-                  leftIcon={
-                    <Image
-                      source={require("../../assets/icons/google-icon.png")}
-                      style={styles.googleIcon}
-                    />
-                  }
-                  disabled={loading}
-                  style={styles.loginButton}
-                />
-              </View>
-            )}
-          </View>
-        </Card>
-
-        <Text
-          variant="h4"
-          weight="medium"
-          color="secondary"
-          style={styles.sectionTitle}
+        <MotiView
+          from={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: "spring", delay: 100, damping: 15 }}
         >
-          Data Management
-        </Text>
-
-        <View style={styles.dataManagementContainer}>
-          <Card variant="outline" style={styles.card}>
-            {!user && (
-              <View style={styles.overlayContainer}>
-                <View style={styles.overlay} />
-                <View style={styles.overlayContent}>
-                  <Lock size={24} color={theme.text.secondary} />
-                  <Text weight="medium" style={styles.overlayText}>
-                    Login to use this feature
-                  </Text>
+          <Card variant="elevated" style={styles.profileCard}>
+            <View style={styles.profileHeader}>
+              {loading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color={theme.primary} />
+                  <Text style={styles.loadingText}>Loading profile...</Text>
                 </View>
-              </View>
-            )}
-            <SettingItem
-              icon={
-                <CloudUpload
-                  size={20}
-                  color={user ? theme.primary : theme.text.disabled}
-                />
-              }
-              title="Backup to Google Drive"
-              subtitle="Securely store your data"
-              onPress={user ? () => router.push("/(modals)/backup") : undefined}
-              disabled={!user}
-            />
-
-            <SettingItem
-              icon={
-                <CloudDownload
-                  size={20}
-                  color={user ? theme.primary : theme.text.disabled}
-                />
-              }
-              title="Restore from Backup"
-              subtitle="Recover your previous data"
-              onPress={
-                user ? () => router.push("/(modals)/restore") : undefined
-              }
-              disabled={!user}
-            />
+              ) : user ? (
+                <>
+                  <Image
+                    source={{
+                      uri:
+                        user.photo ||
+                        "https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg",
+                    }}
+                    style={styles.avatar}
+                  />
+                  <View style={styles.profileInfo}>
+                    <Text variant="h2" weight="bold" style={styles.name}>
+                      {user.name}
+                    </Text>
+                    <Text color="secondary" style={styles.email}>
+                      {user.email}
+                    </Text>
+                  </View>
+                </>
+              ) : (
+                <View style={styles.loginContainer}>
+                  <Text variant="body" style={styles.loginText}>
+                    You're not logged in.
+                  </Text>
+                  <Button
+                    title="Continue with Google"
+                    variant="primary"
+                    onPress={signIn}
+                    leftIcon={
+                      <Image
+                        source={require("../../assets/icons/google-icon.png")}
+                        style={styles.googleIcon}
+                      />
+                    }
+                    disabled={loading}
+                    style={styles.loginButton}
+                  />
+                </View>
+              )}
+            </View>
           </Card>
-        </View>
+        </MotiView>
 
-        <Card variant="outline" style={styles.card}>
+        <MotiView
+          from={{ opacity: 0, translateY: 15 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: "timing", duration: 500, delay: 200 }}
+        >
+          {!isPremium ? (
+            <Card variant="elevated" style={[styles.card, { backgroundColor: theme.primaryLight, padding: 16, marginBottom: 24 }]}>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+                <Star size={20} color={theme.primary} style={{ marginRight: 8 }} />
+                <Text variant="h3" weight="bold" color="primary">Upgrade to Pro</Text>
+              </View>
+              <Text variant="body" color="primary" style={{ marginBottom: 16 }}>
+                Get unlimited job tracking and permanently remove all ads for a one-time payment.
+              </Text>
+              <Button title="Upgrade Now - $4.99" onPress={upgradeToPremium} />
+            </Card>
+          ) : (
+            <Card variant="outline" style={[styles.card, { padding: 16, marginBottom: 24, flexDirection: "row", alignItems: "center" }]}>
+              <CheckCircle size={24} color={theme.success} style={{ marginRight: 12 }} />
+              <View style={{ flex: 1 }}>
+                <Text variant="body" weight="bold">Pro Member</Text>
+                <Text variant="caption" color="secondary">You have lifetime access to all features.</Text>
+              </View>
+            </Card>
+          )}
+        </MotiView>
+
+        <MotiView
+          from={{ opacity: 0, translateY: 15 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: "timing", duration: 500, delay: 300 }}
+        >
           <Text
-            variant="label"
+            variant="h4"
             weight="medium"
             color="secondary"
             style={styles.sectionTitle}
           >
-            Preferences
+            Data Management
           </Text>
-          <SettingItem
-            icon={<Bell size={20} color={theme.primary} />}
-            title="Notifications"
-            rightElement={
-              <Switch
-                value={notifications}
-                onValueChange={setNotifications}
-                trackColor={{ false: theme.border, true: theme.primaryLight }}
-                thumbColor={notifications ? theme.primary : "#f4f3f4"}
-              />
-            }
-          />
-          <SettingItem
-            icon={<Moon size={20} color={theme.primary} />}
-            title="Dark Mode"
-            rightElement={
-              <Switch
-                value={isDarkMode}
-                onValueChange={toggleTheme}
-                trackColor={{ false: theme.border, true: theme.primaryLight }}
-                thumbColor={isDarkMode ? theme.primary : "#f4f3f4"}
-              />
-            }
-          />
-        </Card>
 
-        <Text
-          variant="h4"
-          weight="medium"
-          color="secondary"
-          style={styles.sectionTitle}
+          <View style={styles.dataManagementContainer}>
+            <Card variant="outline" style={styles.card}>
+              {!user && (
+                <View style={styles.overlayContainer}>
+                  <View style={styles.overlay} />
+                  <View style={styles.overlayContent}>
+                    <Lock size={24} color={theme.text.secondary} />
+                    <Text weight="medium" style={styles.overlayText}>
+                      Login to use this feature
+                    </Text>
+                  </View>
+                </View>
+              )}
+              <SettingItem
+                icon={
+                  <CloudUpload
+                    size={20}
+                    color={user ? theme.primary : theme.text.disabled}
+                  />
+                }
+                title="Backup to Google Drive"
+                subtitle="Securely store your data"
+                onPress={user ? () => router.push("/(modals)/backup") : undefined}
+                disabled={!user}
+              />
+
+              <SettingItem
+                icon={
+                  <CloudDownload
+                    size={20}
+                    color={user ? theme.primary : theme.text.disabled}
+                  />
+                }
+                title="Restore from Backup"
+                subtitle="Recover your previous data"
+                onPress={
+                  user ? () => router.push("/(modals)/restore") : undefined
+                }
+                disabled={!user}
+              />
+            </Card>
+          </View>
+        </MotiView>
+
+        <MotiView
+          from={{ opacity: 0, translateY: 15 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: "timing", duration: 500, delay: 400 }}
         >
-          Help & Support
-        </Text>
-
-        <Card variant="outline" style={styles.card}>
-          <Link href="/(modals)/feature-request" asChild>
-            <SettingItem
-              icon={<MessageSquarePlus size={20} color={theme.primary} />}
-              title="Request a Feature"
-              subtitle="Suggest new functionality"
-            />
-          </Link>
-
-          <Link href="/(modals)/privacy" asChild>
-            <SettingItem
-              icon={<FileText size={20} color={theme.primary} />}
-              title="Privacy Policy"
-              subtitle="Read our privacy policy"
-            />
-          </Link>
-
-          <Link href="/(modals)/about" asChild>
-            <SettingItem
-              icon={<Info size={20} color={theme.primary} />}
-              title="About the App"
-              subtitle="Version 1.0.0"
-            />
-          </Link>
-        </Card>
-
-        {user && (
-          <>
+          <Card variant="outline" style={styles.card}>
             <Text
-              variant="h4"
+              variant="label"
               weight="medium"
               color="secondary"
               style={styles.sectionTitle}
             >
-              Account
+              Preferences
             </Text>
+            <SettingItem
+              icon={<Bell size={20} color={theme.primary} />}
+              title="Notifications"
+              rightElement={
+                <Switch
+                  value={notifications}
+                  onValueChange={setNotifications}
+                  trackColor={{ false: theme.border, true: theme.primaryLight }}
+                  thumbColor={notifications ? theme.primary : "#f4f3f4"}
+                />
+              }
+            />
+            <SettingItem
+              icon={<Moon size={20} color={theme.primary} />}
+              title="Dark Mode"
+              rightElement={
+                <Switch
+                  value={isDarkMode}
+                  onValueChange={toggleTheme}
+                  trackColor={{ false: theme.border, true: theme.primaryLight }}
+                  thumbColor={isDarkMode ? theme.primary : "#f4f3f4"}
+                />
+              }
+            />
+          </Card>
+        </MotiView>
 
-            <Card variant="outline" style={styles.card}>
+        <MotiView
+          from={{ opacity: 0, translateY: 15 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: "timing", duration: 500, delay: 500 }}
+        >
+          <Text
+            variant="h4"
+            weight="medium"
+            color="secondary"
+            style={styles.sectionTitle}
+          >
+            Help & Support
+          </Text>
+
+          <Card variant="outline" style={styles.card}>
+            <Link href="/(modals)/feature-request" asChild>
               <SettingItem
-                icon={<LogOut size={20} color={theme.error} />}
-                title="Log Out"
-                subtitle="Sign out of your account"
-                onPress={() => setLogoutDialogue(true)}
+                icon={<MessageSquarePlus size={20} color={theme.primary} />}
+                title="Request a Feature"
+                subtitle="Suggest new functionality"
               />
-            </Card>
-          </>
-        )}
+            </Link>
+
+            <Link href="/(modals)/privacy" asChild>
+              <SettingItem
+                icon={<FileText size={20} color={theme.primary} />}
+                title="Privacy Policy"
+                subtitle="Read our privacy policy"
+              />
+            </Link>
+
+            <Link href="/(modals)/about" asChild>
+              <SettingItem
+                icon={<Info size={20} color={theme.primary} />}
+                title="About the App"
+                subtitle="Version 1.0.0"
+              />
+            </Link>
+          </Card>
+
+          {user && (
+            <MotiView
+              from={{ opacity: 0, translateY: 15 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ type: "timing", duration: 500, delay: 600 }}
+            >
+              <Text
+                variant="h4"
+                weight="medium"
+                color="secondary"
+                style={styles.sectionTitle}
+              >
+                Account
+              </Text>
+
+              <Card variant="outline" style={styles.card}>
+                <SettingItem
+                  icon={<LogOut size={20} color={theme.error} />}
+                  title="Log Out"
+                  subtitle="Sign out of your account"
+                  onPress={() => setLogoutDialogue(true)}
+                />
+              </Card>
+            </MotiView>
+          )}
+        </MotiView>
 
         <View style={styles.footer}>
           <Text variant="caption" color="secondary" align="center">
@@ -399,13 +457,15 @@ const createStyles = (theme: ThemeColors) =>
     profileHeader: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 16,
+      paddingVertical: 8,
     },
     avatar: {
-      width: 60,
-      height: 60,
-      borderRadius: 30,
+      width: 76,
+      height: 76,
+      borderRadius: 38,
       marginRight: 16,
+      borderWidth: 2,
+      borderColor: theme.border,
     },
     profileInfo: {
       flex: 1,

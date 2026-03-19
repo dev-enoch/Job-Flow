@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import Toast from "react-native-toast-message";
+import { showToast } from "../utils/toast";
+import logger from "../utils/logger";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as WebBrowser from "expo-web-browser";
 import { Platform } from "react-native";
 import {
@@ -30,6 +32,8 @@ type AuthContextType = {
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   accessToken: string | null;
+  isPremium: boolean;
+  upgradeToPremium: () => Promise<void>;
 };
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -44,23 +48,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<GoogleUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [isPremium, setIsPremium] = useState<boolean>(false);
   const isWeb = Platform.OS === "web";
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchUserAndPremium = async () => {
       try {
+        const premiumStatus = await AsyncStorage.getItem("jobflow_premium");
+        if (premiumStatus === "true") {
+          setIsPremium(true);
+        }
+
         const userInfo = await GoogleSignin.getCurrentUser();
         if (userInfo) {
           setUser(userInfo.user);
         }
       } catch (e) {
-        console.error("Error loading user:", e);
+        logger.error("Error loading auth state:", e);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUser();
+    fetchUserAndPremium();
   }, []);
 
   const signIn = async () => {
@@ -111,58 +121,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         await tokenCache?.saveToken(ACCESS_TOKEN_KEY, accessToken);
       }
 
-      Toast.show({
-        type: "success",
-        text1: "Sign in Successful",
-        text2: "Google sign-in completed!",
-      });
+      showToast.success("Welcome back! 👋", `Signed in as ${userInfo.name ?? userInfo.email}`);
     } catch (error) {
       if (isErrorWithCode(error)) {
         switch (error.code) {
           case statusCodes.SIGN_IN_REQUIRED:
-            Toast.show({
-              type: "error",
-              text1: "Sign In Required",
-              text2: "Please sign in to continue.",
-            });
+            showToast.error("Sign In Required", "Please sign in to continue.");
             break;
           case statusCodes.IN_PROGRESS:
-            Toast.show({
-              type: "error",
-              text1: "Sign In Progress",
-              text2: "Please wait for sign-in to complete.",
-            });
+            showToast.error("Sign In In Progress", "Please wait for it to complete.");
             break;
           case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
-            Toast.show({
-              type: "error",
-              text1: "Play Services Error",
-              text2: "Google Play Services not available or outdated.",
-            });
+            showToast.error("Play Services Error", "Google Play Services not available or outdated.");
             break;
           case statusCodes.SIGN_IN_CANCELLED:
-            Toast.show({
-              type: "info",
-              text1: "Cancelled",
-              text2: "Sign-in was cancelled.",
-            });
+            showToast.info("Cancelled", "Sign-in was cancelled.");
             break;
           default:
-            Toast.show({
-              type: "error",
-              text1: "Sign In Error",
-              text2: error.message || "An unknown error occurred.",
-            });
+            showToast.error("Sign In Error", error.message || "An unknown error occurred.");
         }
       } else {
-        Toast.show({
-          type: "error",
-          text1: "Error",
-          text2: (error as Error).message || "Unexpected error occurred.",
-        });
+        showToast.error("Error", (error as Error).message || "Unexpected error occurred.");
       }
 
-      console.error("Sign-in error:", error);
+      logger.error("Sign-in error:", error);
     } finally {
       setLoading(false);
     }
@@ -172,14 +154,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     await GoogleSignin.signOut();
     await GoogleSignin.revokeAccess();
     await tokenCache?.deleteToken("access_token");
-
     setUser(null);
     setAccessToken(null);
+    showToast.info("Signed out", "You've been logged out successfully.");
+  };
+
+  const upgradeToPremium = async () => {
+    try {
+      await AsyncStorage.setItem("jobflow_premium", "true");
+      setIsPremium(true);
+      showToast.success("Upgraded to Pro 🎉", "Unlimited jobs and an ad-free experience are now yours!");
+    } catch (error) {
+      logger.error("Upgrade error:", error);
+    }
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, signIn, signOut, accessToken }}
+      value={{ user, loading, signIn, signOut, accessToken, isPremium, upgradeToPremium }}
     >
       {children}
     </AuthContext.Provider>

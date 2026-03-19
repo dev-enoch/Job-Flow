@@ -1,5 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
+import logger from "./logger";
 
 /**
  * Creates a token cache for the native platform
@@ -20,13 +21,13 @@ const createTokenCache = (): {
       try {
         const item = await SecureStore.getItemAsync(key);
         if (item) {
-          console.log(`${key} was used 🔐 \n`);
+          logger.log(`${key} was used 🔐 \n`);
         } else {
-          console.log("No values stored under key: " + key);
+          logger.log("No values stored under key: " + key);
         }
         return item;
       } catch (error) {
-        console.error("secure store get item error: ", error);
+        logger.error("secure store get item error: ", error);
         await SecureStore.deleteItemAsync(key);
         return null;
       }

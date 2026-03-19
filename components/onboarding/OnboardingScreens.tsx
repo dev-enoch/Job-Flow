@@ -6,6 +6,7 @@ import Button from "../ui/Button";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Feather } from "@expo/vector-icons";
 import { MotiView, MotiText } from "moti";
+import logger from "../../utils/logger";
 import Animated, {
   FadeIn,
   FadeOut,
@@ -59,7 +60,7 @@ export default function OnboardingScreens({
       await AsyncStorage.setItem("@onboarding_completed", "true");
       onComplete();
     } catch (error) {
-      console.error("Error saving onboarding status:", error);
+      logger.error("Error saving onboarding status:", error);
     }
   };
 

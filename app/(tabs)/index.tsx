@@ -6,11 +6,11 @@ import {
   RefreshControl,
   TextInput,
   TouchableOpacity,
-  Modal,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Link, RelativePathString, useRouter } from "expo-router";
-import { Plus, Search } from "lucide-react-native";
+import { RelativePathString, useRouter } from "expo-router";
+import { Plus, Search, X } from "lucide-react-native";
 import Text from "../../components/ui/Text";
 import JobCard from "../../components/jobs/JobCard";
 import EmptyState from "../../components/EmptyState";
@@ -19,7 +19,8 @@ import { searchJobs } from "../../utils/jobUtils";
 import { useTheme } from "../../context/themeContext";
 import { useJobs } from "../../context/jobContext";
 import { ThemeColors } from "../../constants/colors";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAuth } from "../../context/authContext";
+import { MotiView } from "moti";
 
 const JobsScreen = () => {
   const router = useRouter();
@@ -28,16 +29,25 @@ const JobsScreen = () => {
   const [filteredJobs, setFilteredJobs] = useState<JobApplication[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
   const { jobs, refreshJobs } = useJobs();
+  const { isPremium } = useAuth();
 
   useEffect(() => {
-    if (searchQuery.trim()) {
-      setFilteredJobs(searchJobs(jobs, searchQuery));
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (debouncedSearchQuery.trim()) {
+      setFilteredJobs(searchJobs(jobs, debouncedSearchQuery));
     } else {
       setFilteredJobs(jobs);
     }
-    ``;
-  }, [searchQuery, jobs]);
+  }, [debouncedSearchQuery, jobs]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -46,6 +56,17 @@ const JobsScreen = () => {
   };
 
   const handleAddJob = () => {
+    if (!isPremium && jobs.length >= 7) {
+      Alert.alert(
+        "Upgrade to Pro",
+        "You've reached the free limit of 7 jobs. Upgrade to Pro to track unlimited jobs!",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "View Options", onPress: () => router.push("/(tabs)/settings") },
+        ]
+      );
+      return;
+    }
     router.push("/(modals)/add-job");
   };
 
@@ -57,58 +78,74 @@ const JobsScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <View style={styles.header}>
-        <Text variant="h1" weight="bold">
-          Applications
-        </Text>
-      </View>
-
-      <View style={styles.searchContainer}>
-        <View style={styles.searchInputContainer}>
-          <Search
-            size={20}
-            color={theme.text.secondary}
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search jobs..."
-            placeholderTextColor={theme.text.placeholder}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
+      <MotiView
+        from={{ opacity: 0, translateY: -10 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: "timing", duration: 400 }}
+        style={styles.header}
+      >
+        <View>
+          <Text variant="h1" weight="bold" style={styles.headerTitle}>
+            Applications
+          </Text>
+          <Text variant="caption" color="secondary">
+            {jobs.length} total · {jobs.filter(j => j.status === "interviewing").length} interviewing
+          </Text>
         </View>
+      </MotiView>
+
+      <View style={[styles.searchContainer, searchFocused && styles.searchContainerFocused]}>
+        <Search size={18} color={searchFocused ? theme.primary : theme.text.secondary} style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by company, role, or tag..."
+          placeholderTextColor={theme.text.placeholder}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => setSearchFocused(false)}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery("")}>
+            <X size={16} color={theme.text.secondary} />
+          </TouchableOpacity>
+        )}
       </View>
 
       <FlatList
-        data={filteredJobs.reverse()}
+        data={[...filteredJobs].reverse()}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <JobCard job={item} onPress={handleJobPress} />
+        renderItem={({ item, index }) => (
+          <JobCard job={item} index={index} onPress={handleJobPress} />
         )}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.primary}
+          />
         }
         ListEmptyComponent={
           <EmptyState
-            title="No Applications Yet"
-            message="Start tracking your job applications by adding your first job"
-            action={{
+            title={searchQuery.trim() ? "No Results Found" : "No Applications Yet"}
+            message={searchQuery.trim() ? "Try adjusting your search query." : "Start tracking your job applications by adding your first one."}
+            action={!searchQuery.trim() ? {
               label: "Add Your First Job",
               onPress: handleAddJob,
-            }}
+            } : undefined}
           />
         }
       />
-      {jobs.length > 0 && (
-        <Link href="/(modals)/add-job" asChild>
-          <TouchableOpacity style={styles.fab}>
-            <Plus size={24} color="white" />
-          </TouchableOpacity>
-        </Link>
-      )}
+
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={handleAddJob}
+        activeOpacity={0.85}
+      >
+        <Plus size={26} color="white" strokeWidth={2.5} />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -123,30 +160,36 @@ const createStyles = (theme: ThemeColors) => {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      paddingHorizontal: 16,
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+    },
+    headerTitle: {
+      fontSize: 30,
+      letterSpacing: -0.5,
     },
     searchContainer: {
-      paddingHorizontal: 16,
-      marginVertical: 16,
-    },
-    searchInputContainer: {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.card,
-      borderRadius: 8,
-      borderWidth: 1,
+      borderRadius: 14,
+      borderWidth: 1.5,
       borderColor: theme.border,
-      paddingHorizontal: 12,
+      paddingHorizontal: 14,
+      marginHorizontal: 16,
+      marginBottom: 12,
+      height: 48,
+    },
+    searchContainerFocused: {
+      borderColor: theme.primary,
     },
     searchIcon: {
-      marginRight: 8,
+      marginRight: 10,
     },
     searchInput: {
       flex: 1,
-      height: 44,
       color: theme.text.primary,
       fontFamily: "Inter-Regular",
-      fontSize: 16,
+      fontSize: 15,
     },
     listContent: {
       paddingHorizontal: 16,
@@ -157,17 +200,17 @@ const createStyles = (theme: ThemeColors) => {
       position: "absolute",
       bottom: 24,
       right: 24,
-      width: 56,
-      height: 56,
-      borderRadius: 28,
+      width: 58,
+      height: 58,
+      borderRadius: 29,
       backgroundColor: theme.primary,
       justifyContent: "center",
       alignItems: "center",
-      elevation: 4,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 4,
+      elevation: 6,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.3,
+      shadowRadius: 16,
     },
   });
 };

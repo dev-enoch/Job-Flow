@@ -7,7 +7,8 @@ import React, {
 } from "react";
 import { JobApplication } from "../types/jobs";
 import { addJob, deleteJob, getJobs, updateJob } from "../utils/storage";
-import Toast from "react-native-toast-message";
+import { showToast } from "../utils/toast";
+import logger from "../utils/logger";
 
 type JobsContextType = {
   jobs: JobApplication[];
@@ -27,12 +28,8 @@ export const JobsProvider = ({ children }: { children: React.ReactNode }) => {
       const stored = await getJobs();
       setJobs(stored || []);
     } catch (error) {
-      console.error("Error fetching jobs:", error);
-      Toast.show({
-        type: "error",
-        text1: "Failed to load jobs",
-        text2: "Please try again later.",
-      });
+      logger.error("Error fetching jobs:", error);
+      showToast.error("Failed to load jobs", "Please try again later.");
     }
   };
 
@@ -44,27 +41,30 @@ export const JobsProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       await addJob(job);
       await refreshJobs();
+      showToast.job(
+        "Application Added 🎉",
+        `${job.role} at ${job.company} has been saved.`
+      );
     } catch (error) {
-      console.error("Error adding job:", error);
-      Toast.show({
-        type: "error",
-        text1: "Add Job Failed",
-        text2: "Could not add the job application.",
-      });
+      logger.error("Error adding job:", error);
+      showToast.error("Add Job Failed", "Could not add the job application.");
     }
   };
 
   const handleDeleteJob = async (id: string) => {
     try {
+      const jobToDelete = jobs.find((j) => j.id === id);
       await deleteJob(id);
       await refreshJobs();
+      showToast.success(
+        "Application Removed",
+        jobToDelete
+          ? `${jobToDelete.role} at ${jobToDelete.company} was deleted.`
+          : "The job has been deleted."
+      );
     } catch (error) {
-      console.error("Error deleting job:", error);
-      Toast.show({
-        type: "error",
-        text1: "Delete Failed",
-        text2: "Could not delete the job application.",
-      });
+      logger.error("Error deleting job:", error);
+      showToast.error("Delete Failed", "Could not delete the job application.");
     }
   };
 
@@ -72,13 +72,13 @@ export const JobsProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       await updateJob(job);
       await refreshJobs();
+      showToast.success(
+        "Application Updated ✓",
+        `${job.role} at ${job.company} has been updated.`
+      );
     } catch (error) {
-      console.error("Error updating job:", error);
-      Toast.show({
-        type: "error",
-        text1: "Update Failed",
-        text2: "Could not update the job application.",
-      });
+      logger.error("Error updating job:", error);
+      showToast.error("Update Failed", "Could not update the job application.");
     }
   };
 

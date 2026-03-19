@@ -12,19 +12,21 @@ import {
 } from "@expo-google-fonts/inter";
 import { ThemeProvider, useTheme } from "../context/themeContext";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Provider } from "react-native-paper";
 import ThemedToast from "../utils/toast";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import * as SystemUI from "expo-system-ui";
 import { JobsProvider } from "../context/jobContext";
-import { DocumentProvider } from "../context/documentContext";
 import { NotificationProvider } from "../context/NotificationContext";
+import AnimatedSplash from "../components/AnimatedSplash";
 
+// Hold the native splash until we manually dismiss it
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [appReady, setAppReady] = useState(false);
+  const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);
+
   const [fontsLoaded, fontError] = useFonts({
     "Inter-Regular": Inter_400Regular,
     "Inter-Medium": Inter_500Medium,
@@ -33,19 +35,19 @@ export default function RootLayout() {
 
   useFrameworkReady();
 
+  // Step 1: hide the native splash as soon as fonts are ready,
+  // then let our JS animated splash take over seamlessly.
   useEffect(() => {
     if (fontsLoaded || fontError) {
       setAppReady(true);
+      // Hide the OS splash — our black AnimatedSplash is already visible
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
 
+  // While fonts/framework are loading, keep the native splash visible
   if (!appReady) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
+    return null; // Native splash is still showing, return nothing
   }
 
   return (
@@ -53,15 +55,17 @@ export default function RootLayout() {
       <AuthProvider>
         <ThemeProvider>
           <JobsProvider>
-            <DocumentProvider>
-              <NotificationProvider>
-                <AppInitializer />
-              </NotificationProvider>
-            </DocumentProvider>
+            <NotificationProvider>
+              <AppInitializer />
+            </NotificationProvider>
           </JobsProvider>
-          <ThemedToast />
         </ThemeProvider>
       </AuthProvider>
+
+      {/* Animated splash renders on top of everything until complete */}
+      {showAnimatedSplash && (
+        <AnimatedSplash onComplete={() => setShowAnimatedSplash(false)} />
+      )}
     </Provider>
   );
 }
@@ -83,12 +87,14 @@ function AppInitializer() {
             backgroundColor={theme.background}
             style={isDarkMode ? "dark" : "light"}
           />
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(modals)" />
             <Stack.Screen name="+not-found" />
           </Stack>
         </SafeAreaView>
       </SafeAreaProvider>
+      <ThemedToast />
     </>
   );
 }

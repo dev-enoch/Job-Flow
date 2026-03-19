@@ -2,11 +2,12 @@ import { Redirect, Tabs } from "expo-router";
 import { useEffect, useState } from "react";
 import { Modal, Platform, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Home, Briefcase, FileText, Settings } from "lucide-react-native";
+import { Home, Briefcase, PieChart, Settings } from "lucide-react-native";
 import { useTheme } from "../../context/themeContext";
 import { ThemeColors } from "../../constants/colors";
 import { StatusBar } from "expo-status-bar";
 import Onboarding from "../../components/onBoarding";
+import logger from "../../utils/logger";
 
 export default function TabLayout() {
   const { theme, isDarkMode } = useTheme();
@@ -20,7 +21,7 @@ export default function TabLayout() {
         const value = await AsyncStorage.getItem("@onboarding_completed");
         setShowOnboarding(value !== "true");
       } catch (error) {
-        console.error("Error checking onboarding:", error);
+        logger.error("Error checking onboarding:", error);
         setShowOnboarding(true);
       }
     };
@@ -33,7 +34,7 @@ export default function TabLayout() {
       await AsyncStorage.setItem("@onboarding_completed", "true");
       setShowOnboarding(false);
     } catch (error) {
-      console.error("Error saving onboarding status:", error);
+      logger.error("Error saving onboarding status:", error);
     }
   };
 
@@ -73,11 +74,11 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="documents"
+          name="insights"
           options={{
-            title: "Documents",
+            title: "Insights",
             tabBarIcon: ({ color, size }) => (
-              <FileText color={color} size={size} />
+              <PieChart color={color} size={size} />
             ),
           }}
         />

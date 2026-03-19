@@ -1,54 +1,54 @@
 export const lightThemeColors = {
-  primary: "#3368F1",
-  primaryLight: "#EBF0FF",
-  secondary: "#26C2AE",
-  secondaryLight: "#E6F8F6",
-  accent: "#7B61FF",
-  accentLight: "#F0ECFF",
-  success: "#4CAF50",
-  successLight: "#E8F5E9",
-  warning: "#F5A623",
-  warningLight: "#FFF4E5",
-  error: "#F44336",
-  errorLight: "#FEEBEA",
-  background: "#FFFFFF",
-  card: "#FFFFFF",
-  border: "#E2E8F0",
+  primary: "#14171a", // Deep slate almost black for primary accents
+  primaryLight: "#f1f5f9",
+  secondary: "#475569", // Medium slate
+  secondaryLight: "#f8fafc",
+  accent: "#2563eb", // Vibrant blue accent
+  accentLight: "#dbeafe",
+  success: "#10b981", // Emerald
+  successLight: "#d1fae5",
+  warning: "#f59e0b", // Amber
+  warningLight: "#fef3c7",
+  error: "#ef4444", // Red
+  errorLight: "#fee2e2",
+  background: "#ffffff", // Pure white for a clean canvas
+  card: "#f8fafc", // Very subtle slate for card backgrounds
+  border: "#e2e8f0",
   text: {
-    primary: "#1F2937",
-    secondary: "#64748B",
-    disabled: "#A1A1AA",
-    white: "#FFFFFF",
-    placeholder: "#A1A1AA",
-    error: "#F44336",
-    success: "#4CAF50",
+    primary: "#0f172a", // Dark slate for heavy contrast
+    secondary: "#64748b",
+    disabled: "#94a3b8",
+    white: "#ffffff",
+    placeholder: "#cbd5e1",
+    error: "#ef4444",
+    success: "#10b981",
   },
 };
 
 export const darkThemeColors = {
-  primary: "#3B82F6",
-  primaryLight: "#1E40AF",
-  secondary: "#8B5CF6",
-  secondaryLight: "#5B21B6",
-  accent: "#10B981",
-  accentLight: "#064E3B",
-  success: "#03DAC6",
-  successLight: "#14532D",
-  warning: "#FBC02D",
-  warningLight: "#78350F",
-  error: "#EF4444",
-  errorLight: "#7F1D1D",
-  background: "#121212",
-  card: "#1e1e1e",
-  border: "#2c2c2c",
+  primary: "#ffffff", // White primary for dark mode
+  primaryLight: "#1e293b",
+  secondary: "#94a3b8", // Light slate
+  secondaryLight: "#0f172a",
+  accent: "#3b82f6", // Vibrant blue for dark mode
+  accentLight: "#1e3a8a",
+  success: "#10b981",
+  successLight: "#064e3b",
+  warning: "#f59e0b",
+  warningLight: "#78350f",
+  error: "#ef4444",
+  errorLight: "#7f1d1d",
+  background: "#020617", // Ultra dark slate
+  card: "#0f172a", // Dark slate cards
+  border: "#1e293b",
   text: {
-    primary: "#E0E0E0",
-    secondary: "#A0A0A0",
-    disabled: "#52525B",
-    white: "#FFFFFF",
-    placeholder: "#71717A",
-    error: "#EF4444",
-    success: "#22C55E",
+    primary: "#f8fafc",
+    secondary: "#94a3b8",
+    disabled: "#475569",
+    white: "#ffffff",
+    placeholder: "#475569",
+    error: "#f87171",
+    success: "#34d399",
   },
 };
 

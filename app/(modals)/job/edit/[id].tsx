@@ -32,6 +32,8 @@ import { ThemeColors } from "../../../../constants/colors";
 import { useJobs } from "../../../../context/jobContext";
 import Input from "../../../../components/ui/Input";
 import { JobApplication } from "../../../../types/jobs";
+import { MotiView } from "moti";
+import logger from "../../../../utils/logger";
 
 const jobSchema = z.object({
   company: z.string().min(1, "Company name is required"),
@@ -81,7 +83,7 @@ export default function EditJobModal() {
       contactPerson: "",
       contactEmail: "",
     },
-  }); 
+  });
 
   useEffect(() => {
     const found = jobs.find((j) => j.id === id);
@@ -120,7 +122,7 @@ export default function EditJobModal() {
       await handleUpdateJob(updatedJob);
       router.back();
     } catch (err) {
-      console.error("Failed to update job:", err);
+      logger.error("Failed to update job:", err);
     }
   };
 
@@ -148,222 +150,228 @@ export default function EditJobModal() {
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
       >
-        <Text variant="h3" weight="bold" style={styles.title}>
-          Edit Job Application
-        </Text>
+        <MotiView
+          from={{ opacity: 0, translateY: 15 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: "timing", duration: 500 }}
+        >
+          <Text variant="h3" weight="bold" style={styles.title}>
+            Edit Job Application
+          </Text>
 
-        <Controller
-          control={control}
-          name="company"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <Input
-              label="Company"
-              placeholder="Enter company name"
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={errors.company?.message}
-              leftIcon={<Building2 size={20} color={theme.text.secondary} />}
-            />
-          )}
-        />
-        <Controller
-          control={control}
-          name="role"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <Input
-              label="Job Title/Role"
-              placeholder="Enter job title or role"
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={errors.role?.message}
-              leftIcon={
-                <BriefcaseIcon size={20} color={theme.text.secondary} />
-              }
-            />
-          )}
-        />
-        <Controller
-          control={control}
-          name="location"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <Input
-              label="Location"
-              placeholder="Enter job location"
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={errors.location?.message}
-              leftIcon={<MapPin size={20} color={theme.text.secondary} />}
-            />
-          )}
-        />
-        <Controller
-          control={control}
-          name="salary"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <Input
-              label="Salary (Optional)"
-              placeholder="Enter salary range"
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={errors.salary?.message}
-              leftIcon={<DollarSign size={20} color={theme.text.secondary} />}
-            />
-          )}
-        />
-
-        <Input
-          label="Date Applied"
-          value={format(new Date(rawDateApplied), "yyyy-MM-dd")}
-          onPressIn={() => setShowDatePicker(true)}
-          leftIcon={<Calendar size={20} color={theme.text.secondary} />}
-          showSoftInputOnFocus={false}
-          pointerEvents="none"
-        />
-        {showDatePicker && (
-          <DateTimePicker
-            value={new Date(rawDateApplied)}
-            mode="date"
-            display="default"
-            onChange={(e, selected) => {
-              setShowDatePicker(false);
-              if (selected) setValue("dateApplied", selected.toISOString());
-            }}
+          <Controller
+            control={control}
+            name="company"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <Input
+                label="Company"
+                placeholder="Enter company name"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.company?.message}
+                leftIcon={<Building2 size={20} color={theme.text.secondary} />}
+              />
+            )}
           />
-        )}
+          <Controller
+            control={control}
+            name="role"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <Input
+                label="Job Title/Role"
+                placeholder="Enter job title or role"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.role?.message}
+                leftIcon={
+                  <BriefcaseIcon size={20} color={theme.text.secondary} />
+                }
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="location"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <Input
+                label="Location"
+                placeholder="Enter job location"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.location?.message}
+                leftIcon={<MapPin size={20} color={theme.text.secondary} />}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="salary"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <Input
+                label="Salary (Optional)"
+                placeholder="Enter salary range"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.salary?.message}
+                leftIcon={<DollarSign size={20} color={theme.text.secondary} />}
+              />
+            )}
+          />
 
-        <Controller
-          control={control}
-          name="status"
-          render={({ field }) => (
-            <View style={styles.inputWrapper}>
-              <Text variant="label" style={styles.label}>
-                Status
-              </Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={field.value}
-                  onValueChange={field.onChange}
-                  style={styles.picker}
-                  dropdownIconColor={theme.text.secondary}
-                >
-                  <Picker.Item label="Applied" value="applied" />
-                  <Picker.Item label="Interviewing" value="interviewing" />
-                  <Picker.Item label="Offered" value="offered" />
-                  <Picker.Item label="Rejected" value="rejected" />
-                  <Picker.Item label="Accepted" value="accepted" />
-                  <Picker.Item label="Declined" value="declined" />
-                </Picker>
+          <Input
+            label="Date Applied"
+            value={format(new Date(rawDateApplied), "yyyy-MM-dd")}
+            onPressIn={() => setShowDatePicker(true)}
+            leftIcon={<Calendar size={20} color={theme.text.secondary} />}
+            showSoftInputOnFocus={false}
+            pointerEvents="none"
+          />
+          {showDatePicker && (
+            <DateTimePicker
+              value={new Date(rawDateApplied)}
+              mode="date"
+              display="default"
+              onChange={(e, selected) => {
+                setShowDatePicker(false);
+                if (selected) setValue("dateApplied", selected.toISOString());
+              }}
+            />
+          )}
+
+          <Controller
+            control={control}
+            name="status"
+            render={({ field }) => (
+              <View style={styles.inputWrapper}>
+                <Text variant="label" style={styles.label}>
+                  Status
+                </Text>
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={field.value}
+                    onValueChange={field.onChange}
+                    style={styles.picker}
+                    dropdownIconColor={theme.text.secondary}
+                  >
+                    <Picker.Item label="Applied" value="applied" />
+                    <Picker.Item label="Interviewing" value="interviewing" />
+                    <Picker.Item label="Offered" value="offered" />
+                    <Picker.Item label="Rejected" value="rejected" />
+                    <Picker.Item label="Accepted" value="accepted" />
+                    <Picker.Item label="Declined" value="declined" />
+                  </Picker>
+                </View>
               </View>
-            </View>
-          )}
-        />
-
-        <Controller
-          control={control}
-          name="url"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <Input
-              label="Job URL (Optional)"
-              placeholder="https://..."
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={errors.url?.message}
-              autoCapitalize="none"
-              keyboardType="url"
-              leftIcon={<Globe size={20} color={theme.text.secondary} />}
-            />
-          )}
-        />
-
-        <Input
-          label="Follow-up Date (Optional)"
-          value={followUpValue ? format(followUpValue, "yyyy-MM-dd") : ""}
-          onPressIn={() => setShowFollowUpDatePicker(true)}
-          leftIcon={<Calendar size={20} color={theme.text.secondary} />}
-          showSoftInputOnFocus={false}
-          pointerEvents="none"
-        />
-        {showFollowUpDatePicker && (
-          <DateTimePicker
-            value={followUpValue || new Date()}
-            mode="date"
-            display="default"
-            onChange={(e, selected) => {
-              setShowFollowUpDatePicker(false);
-              if (selected) setValue("followUpDate", selected.toISOString());
-            }}
+            )}
           />
-        )}
 
-        <Controller
-          control={control}
-          name="contactPerson"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <Input
-              label="Contact Person (Optional)"
-              placeholder="Enter contact name"
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={errors.contactPerson?.message}
-              leftIcon={<User size={20} color={theme.text.secondary} />}
-            />
-          )}
-        />
-        <Controller
-          control={control}
-          name="contactEmail"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <Input
-              label="Contact Email (Optional)"
-              placeholder="Enter contact email"
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={errors.contactEmail?.message}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              leftIcon={<Mail size={20} color={theme.text.secondary} />}
-            />
-          )}
-        />
-        <Controller
-          control={control}
-          name="notes"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <Input
-              label="Notes (Optional)"
-              placeholder="Add any notes about this job application"
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={errors.notes?.message}
-              multiline
-              numberOfLines={4}
-              style={styles.textArea}
-            />
-          )}
-        />
+          <Controller
+            control={control}
+            name="url"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <Input
+                label="Job URL (Optional)"
+                placeholder="https://..."
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.url?.message}
+                autoCapitalize="none"
+                keyboardType="url"
+                leftIcon={<Globe size={20} color={theme.text.secondary} />}
+              />
+            )}
+          />
 
-        <View style={styles.buttonsContainer}>
-          <Button
-            title="Cancel"
-            variant="outline"
-            onPress={() => router.back()}
-            style={styles.cancelButton}
+          <Input
+            label="Follow-up Date (Optional)"
+            value={followUpValue ? format(followUpValue, "yyyy-MM-dd") : ""}
+            onPressIn={() => setShowFollowUpDatePicker(true)}
+            leftIcon={<Calendar size={20} color={theme.text.secondary} />}
+            showSoftInputOnFocus={false}
+            pointerEvents="none"
           />
-          <Button
-            title="Update Application"
-            onPress={handleSubmit(onSubmit)}
-            isLoading={isSubmitting}
-            style={styles.saveButton}
+          {showFollowUpDatePicker && (
+            <DateTimePicker
+              value={followUpValue || new Date()}
+              mode="date"
+              display="default"
+              onChange={(e, selected) => {
+                setShowFollowUpDatePicker(false);
+                if (selected) setValue("followUpDate", selected.toISOString());
+              }}
+            />
+          )}
+
+          <Controller
+            control={control}
+            name="contactPerson"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <Input
+                label="Contact Person (Optional)"
+                placeholder="Enter contact name"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.contactPerson?.message}
+                leftIcon={<User size={20} color={theme.text.secondary} />}
+              />
+            )}
           />
-        </View>
+          <Controller
+            control={control}
+            name="contactEmail"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <Input
+                label="Contact Email (Optional)"
+                placeholder="Enter contact email"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.contactEmail?.message}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                leftIcon={<Mail size={20} color={theme.text.secondary} />}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="notes"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <Input
+                label="Notes (Optional)"
+                placeholder="Add any notes about this job application"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.notes?.message}
+                multiline
+                numberOfLines={4}
+                style={styles.textArea}
+              />
+            )}
+          />
+
+          <View style={styles.buttonsContainer}>
+            <Button
+              title="Cancel"
+              variant="outline"
+              onPress={() => router.back()}
+              style={styles.cancelButton}
+            />
+            <Button
+              title="Update Application"
+              onPress={handleSubmit(onSubmit)}
+              isLoading={isSubmitting}
+              style={styles.saveButton}
+            />
+          </View>
+        </MotiView>
       </ScrollView>
     </KeyboardAvoidingView>
   );

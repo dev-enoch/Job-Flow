@@ -6,7 +6,7 @@ import { JobApplication } from "../../types/jobs";
 import { getStatusCounts } from "../../utils/jobUtils";
 import { useStatusConfig } from "../../constants/jobStatus";
 import { useTheme } from "../../context/themeContext";
-
+import { MotiView } from "moti";
 import { PieChart } from "react-native-svg-charts";
 import { G, Circle, Text as SVGText } from "react-native-svg";
 
@@ -61,44 +61,67 @@ export default function ProgressChart({ jobs }: ProgressChartProps) {
   };
 
   return (
-    <Card variant="elevated" style={styles.card}>
-      <Text variant="h3" weight="bold" style={styles.title}>
-        Application Progress
-      </Text>
-
-      <View style={styles.chartContainer}>
-        {total === 0 ? (
-          <Text>No applications yet</Text>
-        ) : (
-          <PieChart
-            style={{ height: CHART_SIZE, width: CHART_SIZE }}
-            data={pieData}
-            outerRadius="95%"
-            innerRadius="40%"
-            padAngle={0.02}
-          >
-            <Labels />
-          </PieChart>
-        )}
-      </View>
-
-      <View style={styles.legendContainer}>
-        {pieData.map(({ key, svg, label, value }) => (
-          <View key={key} style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: svg.fill }]} />
-            <Text variant="label" style={styles.legendLabel}>
-              {label} ({value})
-            </Text>
-          </View>
-        ))}
-      </View>
-
-      <View style={styles.summary}>
-        <Text variant="body" weight="medium">
-          Total: {total} application{total !== 1 ? "s" : ""}
+    <MotiView
+      from={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ type: "timing", duration: 600 }}
+    >
+      <Card variant="elevated" style={styles.card}>
+        <Text variant="h3" weight="bold" style={styles.title}>
+          Application Progress
         </Text>
-      </View>
-    </Card>
+
+        <View style={styles.chartContainer}>
+          {total === 0 ? (
+            <Text>No applications yet</Text>
+          ) : (
+            <MotiView
+              from={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 300, duration: 800 }}
+            >
+              <PieChart
+                style={{ height: CHART_SIZE, width: CHART_SIZE }}
+                data={pieData}
+                outerRadius="95%"
+                innerRadius="40%"
+                padAngle={0.02}
+              >
+                <Labels />
+              </PieChart>
+            </MotiView>
+          )}
+        </View>
+
+        <View style={styles.legendContainer}>
+          {pieData.map(({ key, svg, label, value }, index) => (
+            <MotiView
+              key={key}
+              style={styles.legendItem}
+              from={{ opacity: 0, translateX: -10 }}
+              animate={{ opacity: 1, translateX: 0 }}
+              transition={{ delay: 400 + (index * 100) }}
+            >
+              <View style={[styles.legendDot, { backgroundColor: svg.fill }]} />
+              <Text variant="label" style={styles.legendLabel}>
+                {label} ({value})
+              </Text>
+            </MotiView>
+          ))}
+        </View>
+
+        <MotiView
+          style={styles.summary}
+          from={{ opacity: 0, translateY: 10 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ delay: 700 }}
+        >
+          <Text variant="body" weight="medium">
+            Total: {total} application{total !== 1 ? "s" : ""}
+          </Text>
+        </MotiView>
+      </Card>
+    </MotiView>
   );
 }
 

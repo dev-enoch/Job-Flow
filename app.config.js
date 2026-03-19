@@ -70,11 +70,7 @@ export default {
       },
       package: getUniqueIdentifier(),
       permissions: [
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.RECORD_AUDIO",
         "android.permission.POST_NOTIFICATIONS",
-        "android.permission.FOREGROUND_SERVICE",
       ],
     },
     web: {
@@ -87,13 +83,13 @@ export default {
       [
         "expo-splash-screen",
         {
-          image: "./assets/icons/splash-icon-light.png",
-          imageWidth: 200,
+          image: "./assets/icons/splash-icon-dark.png",
+          imageWidth: 160,
           resizeMode: "contain",
-          backgroundColor: "#ffffff",
+          backgroundColor: "#000000",
           dark: {
             image: "./assets/icons/splash-icon-dark.png",
-            backgroundColor: "#000",
+            backgroundColor: "#000000",
           },
         },
       ],

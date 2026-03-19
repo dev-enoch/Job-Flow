@@ -1,22 +1,19 @@
 import { Stack } from "expo-router";
+import { useTheme } from "../../../context/themeContext";
 
-export default function JobsLayout() {
+export default function JobModalLayout() {
+  const { theme } = useTheme();
+
   return (
-    <Stack>
-      <Stack.Screen
-        name="[id]"
-        options={{
-          title: "Job Details",
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="edit"
-        options={{
-          title: "Edit Job Details",
-          headerShown: false,
-        }}
-      />
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: theme.background },
+        animation: "slide_from_right",
+      }}
+    >
+      <Stack.Screen name="[id]" />
+      <Stack.Screen name="edit" />
     </Stack>
   );
 }

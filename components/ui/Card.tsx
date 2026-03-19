@@ -18,7 +18,7 @@ export default function Card({
 
   const dynamicStyles = StyleSheet.create({
     base: {
-      borderRadius: 12,
+      borderRadius: 16, // Softer curves for modern feel
       backgroundColor: theme.card,
     },
     default: {
@@ -26,10 +26,12 @@ export default function Card({
     },
     elevated: {
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 2,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.05,
+      shadowRadius: 24,
+      elevation: 4, // smoother soft shadow
+      borderWidth: 1,
+      borderColor: theme.border + "80", // 50% opacity border on elevated cards
     },
     outline: {
       borderWidth: 1,
