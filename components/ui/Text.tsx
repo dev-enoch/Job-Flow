@@ -5,9 +5,10 @@ import {
 } from "react-native";
 import { useTheme } from "../../context/themeContext";
 import { lightThemeColors } from "../../constants/colors";
+import { typography, TypographyVariant } from "../../constants/design-tokens";
 
 interface TextProps extends RNTextProps {
-  variant?: "h1" | "h2" | "h3" | "h4" | "body" | "label" | "caption";
+  variant?: TypographyVariant;
   color?: keyof typeof lightThemeColors.text | string;
   weight?: "regular" | "medium" | "bold";
   align?: "left" | "center" | "right";
@@ -51,34 +52,19 @@ const createStyles = () =>
     base: {
       fontFamily: "Inter-Regular",
     },
-    h1: {
-      fontSize: 28,
-      lineHeight: 34,
-    },
-    h2: {
-      fontSize: 24,
-      lineHeight: 30,
-    },
-    h3: {
-      fontSize: 20,
-      lineHeight: 26,
-    },
-    h4: {
-      fontSize: 17,
-      lineHeight: 22,
-    },
-    body: {
-      fontSize: 16,
-      lineHeight: 24,
-    },
-    label: {
-      fontSize: 14,
-      lineHeight: 20,
-    },
-    caption: {
-      fontSize: 12,
-      lineHeight: 16,
-    },
+    // Type scale from constants/design-tokens.ts — display 36 down to
+    // micro 11. Screen titles use `title` (30), section headings `h2`/`h3`.
+    display: typography.display,
+    title: typography.title,
+    h1: typography.h1,
+    h2: typography.h2,
+    h3: typography.h3,
+    h4: typography.h4,
+    body: typography.body,
+    bodySmall: typography.bodySmall,
+    label: typography.label,
+    caption: typography.caption,
+    micro: typography.micro,
     regular: {
       fontFamily: "Inter-Regular",
     },

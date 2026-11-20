@@ -9,13 +9,23 @@ import { useTheme } from "../../context/themeContext";
 import { MotiView } from "moti";
 import { PieChart } from "react-native-svg-charts";
 import { G, Circle, Text as SVGText } from "react-native-svg";
+import {
+  dimensions,
+  motion,
+  radius,
+  spacing,
+} from "../../constants/design-tokens";
 
 interface ProgressChartProps {
   jobs: JobApplication[];
 }
 
 const { width } = Dimensions.get("window");
-const CHART_SIZE = width > 600 ? 300 : width - 64;
+// Chart fills the card: screen padding + card padding on each side.
+const CHART_SIZE =
+  width > 600
+    ? 300
+    : width - (dimensions.screenPadding + dimensions.cardPadding) * 2;
 
 export default function ProgressChart({ jobs }: ProgressChartProps) {
   const statusCounts = getStatusCounts(jobs);
@@ -64,7 +74,7 @@ export default function ProgressChart({ jobs }: ProgressChartProps) {
     <MotiView
       from={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ type: "timing", duration: 600 }}
+      transition={{ type: "timing", duration: motion.slow }}
     >
       <Card variant="elevated" style={styles.card}>
         <Text variant="h3" weight="bold" style={styles.title}>
@@ -78,7 +88,7 @@ export default function ProgressChart({ jobs }: ProgressChartProps) {
             <MotiView
               from={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 300, duration: 800 }}
+              transition={{ delay: 200, duration: motion.slow }}
             >
               <PieChart
                 style={{ height: CHART_SIZE, width: CHART_SIZE }}
@@ -100,7 +110,7 @@ export default function ProgressChart({ jobs }: ProgressChartProps) {
               style={styles.legendItem}
               from={{ opacity: 0, translateX: -10 }}
               animate={{ opacity: 1, translateX: 0 }}
-              transition={{ delay: 400 + (index * 100) }}
+              transition={{ delay: 200 + (index * 100) }}
             >
               <View style={[styles.legendDot, { backgroundColor: svg.fill }]} />
               <Text variant="label" style={styles.legendLabel}>
@@ -114,7 +124,7 @@ export default function ProgressChart({ jobs }: ProgressChartProps) {
           style={styles.summary}
           from={{ opacity: 0, translateY: 10 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ delay: 700 }}
+          transition={{ delay: 300 }}
         >
           <Text variant="body" weight="medium">
             Total: {total} application{total !== 1 ? "s" : ""}
@@ -128,10 +138,10 @@ export default function ProgressChart({ jobs }: ProgressChartProps) {
 const createStyles = (theme: any) =>
   StyleSheet.create({
     card: {
-      marginBottom: 20,
+      marginBottom: dimensions.sectionGap,
     },
     title: {
-      marginBottom: 16,
+      marginBottom: spacing.lg,
       color: theme.text.primary,
     },
     chartContainer: {
@@ -142,25 +152,25 @@ const createStyles = (theme: any) =>
       flexDirection: "row",
       flexWrap: "wrap",
       justifyContent: "center",
-      marginTop: 20,
+      marginTop: spacing.lg,
     },
     legendItem: {
       flexDirection: "row",
       alignItems: "center",
-      marginHorizontal: 10,
-      marginBottom: 8,
+      marginHorizontal: spacing.sm,
+      marginBottom: spacing.sm,
     },
     legendDot: {
-      width: 14,
-      height: 14,
-      borderRadius: 7,
-      marginRight: 8,
+      width: spacing.md,
+      height: spacing.md,
+      borderRadius: radius.full,
+      marginRight: spacing.sm,
     },
     legendLabel: {
       color: theme.text.primary,
     },
     summary: {
-      marginTop: 16,
+      marginTop: spacing.lg,
       alignItems: "center",
     },
   });

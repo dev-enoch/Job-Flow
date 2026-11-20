@@ -8,8 +8,8 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import Text from "../../components/ui/Text";
+import ScreenHeader from "../../components/ui/ScreenHeader";
 import {
   Bell,
   ChevronRight,
@@ -33,6 +33,12 @@ import { ThemeColors } from "../../constants/colors";
 import { useAuth } from "../../context/authContext";
 import LogoutDialog from "../../components/logout-modal";
 import Button from "../../components/ui/Button";
+import {
+  dimensions,
+  motion,
+  radius,
+  spacing,
+} from "../../constants/design-tokens";
 
 interface SettingItemProps {
   icon: React.ReactNode;
@@ -90,12 +96,9 @@ export default function SettingsScreen() {
   const [logutDialogue, setLogoutDialogue] = useState(false);
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <View style={styles.header}>
-        <Text variant="h1" weight="bold">
-          Settings
-        </Text>
-      </View>
+    // Root layout already provides the top safe-area inset.
+    <View style={styles.container}>
+      <ScreenHeader title="Settings" />
 
       <ScrollView style={styles.content}>
         <MotiView
@@ -108,7 +111,7 @@ export default function SettingsScreen() {
               {loading ? (
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="small" color={theme.primary} />
-                  <Text style={styles.loadingText}>Loading profile...</Text>
+                  <Text variant="body" color="secondary" style={styles.loadingText}>Loading profile...</Text>
                 </View>
               ) : user ? (
                 <>
@@ -124,7 +127,7 @@ export default function SettingsScreen() {
                     <Text variant="h2" weight="bold" style={styles.name}>
                       {user.name}
                     </Text>
-                    <Text color="secondary" style={styles.email}>
+                    <Text variant="label" color="secondary">
                       {user.email}
                     </Text>
                   </View>
@@ -156,22 +159,22 @@ export default function SettingsScreen() {
         <MotiView
           from={{ opacity: 0, translateY: 15 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", duration: 500, delay: 200 }}
+          transition={{ type: "timing", duration: motion.slow, delay: 200 }}
         >
           {!isPremium ? (
-            <Card variant="elevated" style={[styles.card, { backgroundColor: theme.primaryLight, padding: 16, marginBottom: 24 }]}>
-              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
-                <Star size={20} color={theme.primary} style={{ marginRight: 8 }} />
+            <Card variant="elevated" style={styles.proCard}>
+              <View style={styles.proCardHeader}>
+                <Star size={20} color={theme.primary} style={styles.proCardIcon} />
                 <Text variant="h3" weight="bold" color="primary">Upgrade to Pro</Text>
               </View>
-              <Text variant="body" color="primary" style={{ marginBottom: 16 }}>
+              <Text variant="body" color="primary" style={styles.proCardText}>
                 Get unlimited job tracking and permanently remove all ads for a one-time payment.
               </Text>
               <Button title="Upgrade Now - $4.99" onPress={upgradeToPremium} />
             </Card>
           ) : (
-            <Card variant="outline" style={[styles.card, { padding: 16, marginBottom: 24, flexDirection: "row", alignItems: "center" }]}>
-              <CheckCircle size={24} color={theme.success} style={{ marginRight: 12 }} />
+            <Card variant="outline" style={styles.proMemberCard}>
+              <CheckCircle size={24} color={theme.success} style={styles.proMemberIcon} />
               <View style={{ flex: 1 }}>
                 <Text variant="body" weight="bold">Pro Member</Text>
                 <Text variant="caption" color="secondary">You have lifetime access to all features.</Text>
@@ -183,7 +186,7 @@ export default function SettingsScreen() {
         <MotiView
           from={{ opacity: 0, translateY: 15 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", duration: 500, delay: 300 }}
+          transition={{ type: "timing", duration: motion.slow, delay: 300 }}
         >
           <Text
             variant="h4"
@@ -196,52 +199,32 @@ export default function SettingsScreen() {
 
           <View style={styles.dataManagementContainer}>
             <Card variant="outline" style={styles.card}>
-              {!user && (
-                <View style={styles.overlayContainer}>
-                  <View style={styles.overlay} />
-                  <View style={styles.overlayContent}>
-                    <Lock size={24} color={theme.text.secondary} />
-                    <Text weight="medium" style={styles.overlayText}>
-                      Login to use this feature
-                    </Text>
-                  </View>
-                </View>
-              )}
               <SettingItem
-                icon={
-                  <CloudUpload
-                    size={20}
-                    color={user ? theme.primary : theme.text.disabled}
-                  />
-                }
-                title="Backup to Google Drive"
-                subtitle="Securely store your data"
-                onPress={user ? () => router.push("/(modals)/backup") : undefined}
-                disabled={!user}
+                icon={<CloudUpload size={20} color={theme.primary} />}
+                title="Backup"
+                subtitle="Export a JSON file or sync to Google Drive"
+                onPress={() => router.push("/(modals)/backup")}
               />
 
               <SettingItem
-                icon={
-                  <CloudDownload
-                    size={20}
-                    color={user ? theme.primary : theme.text.disabled}
-                  />
-                }
+                icon={<CloudDownload size={20} color={theme.primary} />}
                 title="Restore from Backup"
-                subtitle="Recover your previous data"
-                onPress={
-                  user ? () => router.push("/(modals)/restore") : undefined
-                }
-                disabled={!user}
+                subtitle="Import a JSON file or recover from Drive"
+                onPress={() => router.push("/(modals)/restore")}
               />
             </Card>
+            {!user && (
+              <Text variant="caption" color="secondary" style={styles.dataHint}>
+                Local JSON backup and restore work without signing in. Google Drive backup needs a Google sign-in.
+              </Text>
+            )}
           </View>
         </MotiView>
 
         <MotiView
           from={{ opacity: 0, translateY: 15 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", duration: 500, delay: 400 }}
+          transition={{ type: "timing", duration: motion.slow, delay: 400 }}
         >
           <Card variant="outline" style={styles.card}>
             <Text
@@ -260,7 +243,7 @@ export default function SettingsScreen() {
                   value={notifications}
                   onValueChange={setNotifications}
                   trackColor={{ false: theme.border, true: theme.primaryLight }}
-                  thumbColor={notifications ? theme.primary : "#f4f3f4"}
+                  thumbColor={notifications ? theme.primary : theme.surfaceElevated}
                 />
               }
             />
@@ -272,7 +255,7 @@ export default function SettingsScreen() {
                   value={isDarkMode}
                   onValueChange={toggleTheme}
                   trackColor={{ false: theme.border, true: theme.primaryLight }}
-                  thumbColor={isDarkMode ? theme.primary : "#f4f3f4"}
+                  thumbColor={isDarkMode ? theme.primary : theme.surfaceElevated}
                 />
               }
             />
@@ -282,7 +265,7 @@ export default function SettingsScreen() {
         <MotiView
           from={{ opacity: 0, translateY: 15 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", duration: 500, delay: 500 }}
+          transition={{ type: "timing", duration: motion.slow, delay: 500 }}
         >
           <Text
             variant="h4"
@@ -323,7 +306,7 @@ export default function SettingsScreen() {
             <MotiView
               from={{ opacity: 0, translateY: 15 }}
               animate={{ opacity: 1, translateY: 0 }}
-              transition={{ type: "timing", duration: 500, delay: 600 }}
+              transition={{ type: "timing", duration: motion.slow, delay: 600 }}
             >
               <Text
                 variant="h4"
@@ -360,7 +343,7 @@ export default function SettingsScreen() {
           signOut();
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -370,66 +353,70 @@ const createStyles = (theme: ThemeColors) =>
       flex: 1,
       backgroundColor: theme.background,
     },
-    header: {
-      paddingHorizontal: 16,
-    },
     content: {
       flex: 1,
-      paddingHorizontal: 16,
-      marginTop: 16,
+      paddingHorizontal: dimensions.screenPadding,
     },
     sectionTitle: {
-      marginTop: 24,
-      marginBottom: 8,
-      paddingHorizontal: 4,
+      marginTop: dimensions.sectionGap,
+      marginBottom: spacing.sm,
+      paddingHorizontal: spacing.xs,
     },
     card: {
-      marginBottom: 8,
+      marginBottom: spacing.sm,
+    },
+    proCard: {
+      backgroundColor: theme.primaryLight,
+      padding: dimensions.cardPadding,
+      marginBottom: dimensions.sectionGap,
+    },
+    proCardHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: spacing.sm,
+    },
+    proCardIcon: {
+      marginRight: spacing.sm,
+    },
+    proCardText: {
+      marginBottom: spacing.lg,
+    },
+    proMemberCard: {
+      padding: dimensions.cardPadding,
+      marginBottom: dimensions.sectionGap,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    proMemberIcon: {
+      marginRight: spacing.md,
     },
     dataManagementContainer: {
       position: "relative",
     },
-    overlayContainer: {
-      ...StyleSheet.absoluteFillObject,
-      zIndex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    overlay: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: theme.background,
-      opacity: 0.8,
-    },
-    overlayContent: {
-      backgroundColor: theme.card,
-      padding: 16,
-      borderRadius: 8,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    overlayText: {
-      marginLeft: 8,
-      color: theme.text.primary,
+    dataHint: {
+      marginTop: spacing.sm,
+      paddingHorizontal: spacing.xs,
     },
     menuItem: {
       flexDirection: "row",
       alignItems: "center",
-      paddingVertical: 12,
+      paddingVertical: spacing.md,
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
     },
     menuItemContent: {
       flex: 1,
-      marginLeft: 12,
+      marginLeft: spacing.md,
     },
     footer: {
-      marginVertical: 24,
+      marginVertical: spacing.xxl,
     },
     settingItem: {
       flexDirection: "row",
       alignItems: "center",
-      paddingVertical: 12,
+      // Minimum 44px touch target for every settings row.
+      minHeight: dimensions.minTouchTarget,
+      paddingVertical: spacing.md,
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
     },
@@ -440,30 +427,29 @@ const createStyles = (theme: ThemeColors) =>
       color: theme.text.disabled,
     },
     settingIcon: {
-      marginRight: 12,
-      width: 24,
+      marginRight: spacing.md,
+      width: spacing.xxl,
       alignItems: "center",
     },
     settingContent: {
       flex: 1,
     },
     profileCard: {
-      padding: 16,
-      borderRadius: 12,
-      backgroundColor: theme.card,
-      marginBottom: 24,
-      marginTop: 16,
+      padding: dimensions.cardPadding,
+      backgroundColor: theme.surface,
+      marginBottom: dimensions.sectionGap,
+      marginTop: spacing.lg,
     },
     profileHeader: {
       flexDirection: "row",
       alignItems: "center",
-      paddingVertical: 8,
+      paddingVertical: spacing.sm,
     },
     avatar: {
       width: 76,
       height: 76,
-      borderRadius: 38,
-      marginRight: 16,
+      borderRadius: radius.full,
+      marginRight: spacing.lg,
       borderWidth: 2,
       borderColor: theme.border,
     },
@@ -472,21 +458,17 @@ const createStyles = (theme: ThemeColors) =>
     },
     name: {
       color: theme.text.primary,
-      marginBottom: 4,
-    },
-    email: {
-      fontSize: 14,
+      marginBottom: spacing.xs,
     },
     loadingContainer: {
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
       backgroundColor: theme.background,
-      padding: 20,
+      padding: spacing.xl,
     },
     loadingText: {
-      marginTop: 12,
-      fontSize: 16,
+      marginTop: spacing.md,
       color: theme.text.secondary,
     },
     loginContainer: {
@@ -495,7 +477,7 @@ const createStyles = (theme: ThemeColors) =>
       justifyContent: "center",
     },
     loginText: {
-      marginBottom: 8,
+      marginBottom: spacing.sm,
       color: theme.text.secondary,
     },
     loginButton: {
@@ -504,6 +486,6 @@ const createStyles = (theme: ThemeColors) =>
     googleIcon: {
       width: 18,
       height: 18,
-      marginRight: 8,
+      marginRight: spacing.sm,
     },
   });

@@ -3,6 +3,10 @@ import "dotenv/config";
 const IS_DEV = process.env.APP_VARIANT === "development";
 const IS_PREVIEW = process.env.APP_VARIANT === "preview";
 
+// Deep-link scheme: EXPO_PUBLIC_SCHEME from the environment, falling back to
+// the default "jobflow" when it is not set.
+const SCHEME = process.env.EXPO_PUBLIC_SCHEME || "jobflow";
+
 const getUniqueIdentifier = () => {
   if (IS_DEV) {
     return "com.jobflow.app.dev";
@@ -34,7 +38,7 @@ export default {
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/icons/adaptive-icon.png",
-    scheme: "jobflow",
+    scheme: SCHEME,
     owner: "iamwyteshadow",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
@@ -128,6 +132,5 @@ export default {
         projectId: "1a3825d8-ddde-4e78-9295-89856a50e31c",
       },
     },
-    scheme: "jobflow",
   },
 };

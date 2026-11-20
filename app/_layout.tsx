@@ -80,12 +80,16 @@ function AppInitializer() {
   return (
     <>
       <SafeAreaProvider>
+        {/* Top/left/right insets are owned here. The bottom inset is owned
+            by the tab bar (64 + safe area) and by modal screens, so content
+            never gets double bottom padding. */}
         <SafeAreaView
+          edges={["top", "left", "right"]}
           style={[styles.safeArea, { backgroundColor: theme.background }]}
         >
           <StatusBar
             backgroundColor={theme.background}
-            style={isDarkMode ? "dark" : "light"}
+            style={isDarkMode ? "light" : "dark"}
           />
           <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
             <Stack.Screen name="(tabs)" />
@@ -93,8 +97,9 @@ function AppInitializer() {
             <Stack.Screen name="+not-found" />
           </Stack>
         </SafeAreaView>
+        {/* Inside the provider so the toast can read the real safe area. */}
+        <ThemedToast />
       </SafeAreaProvider>
-      <ThemedToast />
     </>
   );
 }

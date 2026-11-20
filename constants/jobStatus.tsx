@@ -44,8 +44,8 @@ export const useStatusConfig = () => {
       label: "Accepted",
     },
     declined: {
-      color: "#6B7280",
-      background: "#F3F4F6",
+      color: colors.muted,
+      background: colors.mutedLight,
       label: "Declined",
     },
   } as const;

@@ -12,7 +12,7 @@ import { AppState, Platform } from "react-native";
 import { useRouter, RelativePathString } from "expo-router";
 import { JobApplication } from "../types/jobs";
 import { JobStatus } from "../constants/jobStatus";
-import { JOBS_STORAGE_KEY } from "../utils/constants";
+import JobService from "../services/JobService";
 import logger from "../utils/logger";
 
 // ─── Notification Handler (foreground) ────────────────────────────────────────
@@ -176,18 +176,24 @@ async function registerPermissions(): Promise<boolean> {
 }
 
 // ─── Job Follow-up Reminders ─────────────────────────────────────────────────
+// Jobs live in SQLite (jobflow.db). The old AsyncStorage key was emptied by
+// the first-launch migration, so reminders must be read from JobService.
+export async function rescheduleAllJobReminders(): Promise<void> {
+  try {
+    const granted = await registerPermissions();
+    if (!granted) return;
+    await scheduleAllJobReminders();
+  } catch (error) {
+    logger.error("Failed to reschedule job reminders:", error);
+  }
+}
+
 async function scheduleAllJobReminders() {
   await Notifications.cancelAllScheduledNotificationsAsync();
 
-  const raw = await AsyncStorage.getItem(JOBS_STORAGE_KEY);
-  if (!raw) return;
-
-  let jobs: JobApplication[];
-  try {
-    jobs = JSON.parse(raw);
-  } catch {
-    return;
-  }
+  // Read from SQLite — not AsyncStorage, which no longer holds the jobs.
+  const jobs = await JobService.getLocalJobs();
+  if (jobs.length === 0) return;
 
   const validStatuses: JobStatus[] = ["applied", "interviewing", "offered", "accepted"];
   const now = new Date();

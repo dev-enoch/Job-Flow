@@ -1,10 +1,24 @@
 import { Platform } from "react-native";
 import Constants, { AndroidManifest, IOSManifest, WebManifest } from "expo-constants";
+import * as FileSystem from "expo-file-system";
 import getAccessToken from "../utils/token";
 import logger from "../utils/logger";
+import { JobApplication } from "../types/jobs";
+import { jobBackupSchema } from "../schemas/job";
 
 const BACKUP_FILENAME = "jobflow_backup.json";
 const MIME_TYPE = "application/json";
+const BACKUP_VERSION = "1.0";
+
+export interface BackupPayload {
+  metadata: {
+    version: string;
+    lastUpdated: string;
+    device: string;
+    appVersion: string;
+  };
+  jobs: JobApplication[];
+}
 
 type PlatformSpecificManifest = AndroidManifest | IOSManifest | WebManifest;
 
@@ -25,21 +39,74 @@ class BackupService {
         }
     }
 
-    async createBackup(appData: any): Promise<boolean> {
+    buildBackupPayload(jobs: JobApplication[]): BackupPayload {
+        return {
+            metadata: {
+                version: BACKUP_VERSION,
+                lastUpdated: new Date().toISOString(),
+                device: Platform.OS,
+                appVersion: this.getPlatformManifest()?.version || "unknown",
+            },
+            jobs,
+        };
+    }
+
+    // ─── Local JSON file backup (document picker / share sheet) ─────────────
+
+    /**
+     * Write the jobs to a JSON file in the app's document directory and
+     * return its URI so the caller can hand it to the share sheet.
+     */
+    async exportJobsToFile(jobs: JobApplication[]): Promise<string> {
+        const payload = this.buildBackupPayload(jobs);
+        const jsonData = JSON.stringify(payload, null, 2);
+        const fileUri = (FileSystem.documentDirectory || "") + BACKUP_FILENAME;
+        await FileSystem.writeAsStringAsync(fileUri, jsonData, {
+            encoding: FileSystem.EncodingType.UTF8,
+        });
+        return fileUri;
+    }
+
+    /**
+     * Read and validate a JSON backup file (for example one picked with the
+     * document picker). Returns the payload, or throws on invalid content.
+     */
+    async importJobsFromFile(fileUri: string): Promise<BackupPayload> {
+        const jsonData = await FileSystem.readAsStringAsync(fileUri, {
+            encoding: FileSystem.EncodingType.UTF8,
+        });
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(jsonData);
+        } catch {
+            throw new Error("Backup file is not valid JSON");
+        }
+        const result = jobBackupSchema.safeParse(parsed);
+        if (!result.success) {
+            throw new Error("Backup file has an invalid format");
+        }
+        // Jobs themselves are validated one by one at import time
+        // (JobService.importJobs), so unknown/invalid entries are skipped
+        // rather than failing the whole restore.
+        return {
+            metadata: {
+                version: result.data.metadata.version,
+                lastUpdated: result.data.metadata.lastUpdated || new Date().toISOString(),
+                device: result.data.metadata.device || "unknown",
+                appVersion: result.data.metadata.appVersion || "unknown",
+            },
+            jobs: result.data.jobs as JobApplication[],
+        };
+    }
+
+    // ─── Google Drive backup (requires sign-in) ─────────────────────────────
+
+    async createBackup(jobs: JobApplication[]): Promise<boolean> {
         try {
             const accessToken = await getAccessToken();
             if (!accessToken) throw new Error("Not authenticated");
 
-            const backupData = {
-                metadata: {
-                    version: "1.0",
-                    lastUpdated: new Date().toISOString(),
-                    device: Platform.OS,
-                    appVersion: this.getPlatformManifest()?.version || "unknown",
-                },
-                appData: appData,
-            };
-
+            const backupData = this.buildBackupPayload(jobs);
             const jsonData = JSON.stringify(backupData);
             const existingFileId = await this.findBackupFile(accessToken);
 
@@ -56,7 +123,7 @@ class BackupService {
         }
     }
 
-    async restoreBackup(): Promise<{ metadata: any; appData: any } | null> {
+    async restoreBackup(): Promise<BackupPayload | null> {
         try {
             const accessToken = await getAccessToken();
             if (!accessToken) throw new Error("Not authenticated");
@@ -76,11 +143,17 @@ class BackupService {
             if (!response.ok) throw new Error("Failed to fetch backup");
 
             const backupData = await response.json();
-            this.validateBackup(backupData);
+            const result = jobBackupSchema.safeParse(backupData);
+            if (!result.success) throw new Error("Invalid backup format");
 
             return {
-                metadata: backupData.metadata,
-                appData: backupData.appData,
+                metadata: {
+                    version: result.data.metadata.version,
+                    lastUpdated: result.data.metadata.lastUpdated || new Date().toISOString(),
+                    device: result.data.metadata.device || "unknown",
+                    appVersion: result.data.metadata.appVersion || "unknown",
+                },
+                jobs: result.data.jobs as JobApplication[],
             };
         } catch (error) {
             logger.error("Restore failed:", error);
@@ -154,12 +227,6 @@ class BackupService {
         } catch (error) {
             logger.error("File search failed:", error);
             return null;
-        }
-    }
-
-    private validateBackup(backupData: any): void {
-        if (!backupData?.metadata?.version) {
-            throw new Error("Invalid backup format");
         }
     }
 

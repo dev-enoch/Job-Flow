@@ -6,12 +6,18 @@ import {
   FlatList,
   TouchableOpacity,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BriefcaseIcon, CalendarCheck, BarChart3 } from "lucide-react-native";
 import Text from "./ui/Text";
 import { ThemeColors } from "../constants/colors";
 import { useTheme } from "../context/themeContext";
 import Button from "./ui/Button";
 import { MotiView } from "moti";
+import {
+  motion,
+  radius,
+  spacing,
+} from "../constants/design-tokens";
 
 const { width } = Dimensions.get("window");
 
@@ -55,6 +61,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => Promise<v
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = createStyles(theme);
 
   const renderItem = ({ item }: { item: Slide }) => (
@@ -71,12 +78,12 @@ export default function Onboarding({ onComplete }: { onComplete: () => Promise<v
       <MotiView
         from={{ opacity: 0, translateY: 20 }}
         animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: "timing", duration: 500, delay: 150 }}
+        transition={{ type: "timing", duration: motion.slow, delay: 150 }}
       >
-        <Text variant="h2" weight="bold" style={styles.title} align="center">
+        <Text variant="h1" weight="bold" style={styles.title} align="center">
           {item.title}
         </Text>
-        <Text color="secondary" align="center" style={styles.description}>
+        <Text variant="body" color="secondary" align="center" style={styles.description}>
           {item.description}
         </Text>
       </MotiView>
@@ -110,7 +117,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => Promise<v
         }}
       />
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.xxl }]}>
         <View style={styles.pagination}>
           {slides.map((slide, index) => (
             <MotiView
@@ -122,7 +129,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => Promise<v
                     ? slide.accentColor(theme)
                     : theme.border,
               }}
-              transition={{ type: "timing", duration: 300 }}
+              transition={{ type: "timing", duration: motion.slow }}
               style={styles.paginationDot}
             />
           ))}
@@ -136,7 +143,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => Promise<v
 
         {currentIndex < slides.length - 1 && (
           <TouchableOpacity onPress={onComplete} style={styles.skipButton}>
-            <Text color="secondary" style={styles.skipText}>Skip for now</Text>
+            <Text variant="bodySmall" color="secondary">Skip for now</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -155,15 +162,15 @@ const createStyles = (theme: ThemeColors) => {
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      paddingHorizontal: 32,
+      paddingHorizontal: spacing.xxxl,
     },
     iconContainer: {
       width: 160,
       height: 160,
-      borderRadius: 80,
+      borderRadius: radius.full,
       justifyContent: "center",
       alignItems: "center",
-      marginBottom: 48,
+      marginBottom: spacing.giant,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 16 },
       shadowOpacity: 0.08,
@@ -171,41 +178,33 @@ const createStyles = (theme: ThemeColors) => {
       elevation: 8,
     },
     title: {
-      marginBottom: 16,
-      lineHeight: 36,
-      fontSize: 26,
+      marginBottom: spacing.lg,
     },
     description: {
-      lineHeight: 26,
-      fontSize: 16,
-      paddingHorizontal: 8,
+      paddingHorizontal: spacing.sm,
     },
     footer: {
-      padding: 32,
-      paddingBottom: 48,
+      padding: spacing.xxxl,
     },
     pagination: {
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
-      marginBottom: 32,
-      gap: 6,
+      marginBottom: spacing.xxxl,
+      gap: spacing.sm,
     },
     paginationDot: {
       height: 8,
       borderRadius: 4,
     },
     button: {
-      marginBottom: 16,
-      borderRadius: 28,
-      height: 56,
+      marginBottom: spacing.lg,
+      borderRadius: radius.xxl,
+      height: 52,
     },
     skipButton: {
       alignItems: "center",
-      paddingVertical: 8,
-    },
-    skipText: {
-      fontSize: 15,
+      paddingVertical: spacing.md,
     },
   });
 };

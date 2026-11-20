@@ -74,11 +74,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const signIn = async () => {
+    // Google Sign-In cannot run without a configured web client id. Fail
+    // gracefully with a clear message instead of letting the native module
+    // throw a cryptic error. Required env vars (see README):
+    // GOOGLE_WEB_CLIENT_ID (and IOS_CLIENT_ID on iOS).
+    if (!GOOGLE_WEB_CLIENT_ID) {
+      logger.error(
+        "Google Sign-In is not configured: GOOGLE_WEB_CLIENT_ID is missing. " +
+          "Set it in .env.local or EAS secrets."
+      );
+      showToast.error(
+        "Sign-In Not Configured",
+        "Google Sign-In is missing its client ID on this build. Ask the developer to set GOOGLE_WEB_CLIENT_ID."
+      );
+      return;
+    }
+
     setLoading(true);
     try {
       GoogleSignin.configure({
         webClientId: GOOGLE_WEB_CLIENT_ID,
-        iosClientId: IOS_CLIENT_ID,
+        ...(IOS_CLIENT_ID ? { iosClientId: IOS_CLIENT_ID } : {}),
         profileImageSize: 150,
         offlineAccess: false,
         scopes: [
@@ -89,9 +105,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         ],
       });
 
-      await GoogleSignin.hasPlayServices({
-        showPlayServicesUpdateDialog: true,
-      });
+      // hasPlayServices is Android-only; on iOS the call is a no-op at best
+      // and can throw on some versions, so skip it there.
+      if (Platform.OS === "android") {
+        await GoogleSignin.hasPlayServices({
+          showPlayServicesUpdateDialog: true,
+        });
+      }
 
       let userInfo: GoogleUser;
 

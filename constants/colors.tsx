@@ -14,6 +14,16 @@ export const lightThemeColors = {
   background: "#ffffff", // Pure white for a clean canvas
   card: "#f8fafc", // Very subtle slate for card backgrounds
   border: "#e2e8f0",
+  // Semantic aliases (design tokens): same values, clearer intent.
+  // `action` is the primary action colour — it aliases `primary` so the
+  // app's near-black brand button is preserved.
+  surface: "#f8fafc",
+  surfaceElevated: "#ffffff",
+  divider: "#e2e8f0",
+  action: "#14171a",
+  onAction: "#ffffff",
+  muted: "#6b7280",
+  mutedLight: "#f3f4f6",
   text: {
     primary: "#0f172a", // Dark slate for heavy contrast
     secondary: "#64748b",
@@ -41,6 +51,14 @@ export const darkThemeColors = {
   background: "#020617", // Ultra dark slate
   card: "#0f172a", // Dark slate cards
   border: "#1e293b",
+  // Semantic aliases (design tokens) — see the light theme above.
+  surface: "#0f172a",
+  surfaceElevated: "#1e293b",
+  divider: "#1e293b",
+  action: "#ffffff",
+  onAction: "#0f172a",
+  muted: "#9ca3af",
+  mutedLight: "#1f2937",
   text: {
     primary: "#f8fafc",
     secondary: "#94a3b8",

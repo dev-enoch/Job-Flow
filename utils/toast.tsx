@@ -1,6 +1,7 @@
 import { useTheme } from "../context/themeContext";
 import Toast, { BaseToast, BaseToastProps } from "react-native-toast-message";
-import { StyleSheet, View, Platform } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   CheckCircle2,
   AlertCircle,
@@ -8,6 +9,7 @@ import {
   BriefcaseIcon,
 } from "lucide-react-native";
 import Text from "../components/ui/Text";
+import { radius, spacing } from "../constants/design-tokens";
 
 /* ───────────────────────────────────────────
    iPhone Dynamic Island-style pill toast.
@@ -60,6 +62,7 @@ function PillToast({
 
 export default function ThemedToast() {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const toastConfig = {
     success: ({ text1, text2 }: any) => (
@@ -108,7 +111,8 @@ export default function ThemedToast() {
     <Toast
       config={toastConfig}
       position="top"
-      topOffset={Platform.OS === "ios" ? 60 : 16}
+      // Real safe-area inset, never a hardcoded status-bar height.
+      topOffset={insets.top + spacing.sm}
       visibilityTime={3000}
     />
   );
@@ -131,9 +135,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 50,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
     borderWidth: 1,
     minWidth: 200,
     maxWidth: "88%",
@@ -147,18 +151,18 @@ const styles = StyleSheet.create({
   iconWrap: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: radius.full,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 10,
+    marginRight: spacing.sm,
     flexShrink: 0,
   },
   textWrap: {
     flex: 1,
   },
   text1: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 20,
   },
   text2: {
     fontSize: 12,

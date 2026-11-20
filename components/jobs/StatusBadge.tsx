@@ -1,6 +1,7 @@
 import { View, StyleSheet } from "react-native";
 import Text from "../../components/ui/Text";
 import { JobStatus, useStatusConfig } from "../../constants/jobStatus";
+import { radius, spacing } from "../../constants/design-tokens";
 
 interface StatusBadgeProps {
   status: JobStatus;
@@ -28,19 +29,19 @@ export default function StatusBadge({
 
 const styles = StyleSheet.create({
   badge: {
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
     alignItems: "center",
     justifyContent: "center",
   },
   small: {
-    paddingHorizontal: 8,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 2,
   },
   medium: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
   },
   text: {
     fontFamily: "Inter-Medium",

@@ -16,6 +16,7 @@ import { MotiView } from "moti";
 import Text from "../../../components/ui/Text";
 import Card from "../../../components/ui/Card";
 import Button from "../../../components/ui/Button";
+import ScreenHeader from "../../../components/ui/ScreenHeader";
 import StatusPill from "../../../components/jobs/StatusPill";
 import { updateJob } from "../../../utils/storage";
 import { JobApplication } from "../../../types/jobs";
@@ -38,6 +39,11 @@ import { ThemeColors } from "../../../constants/colors";
 import DeleteJobDialogue from "../../../components/DeleteJobModal";
 import { useJobs } from "../../../context/jobContext";
 import logger from "../../../utils/logger";
+import {
+  dimensions,
+  motion,
+  spacing,
+} from "../../../constants/design-tokens";
 
 export default function JobDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -117,6 +123,7 @@ export default function JobDetails() {
 
   return (
     <SafeAreaView edges={["bottom"]} style={styles.safeArea}>
+      <ScreenHeader title="Details" onBack={() => router.back()} />
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
@@ -125,7 +132,7 @@ export default function JobDetails() {
         <MotiView
           from={{ opacity: 0, translateY: -20 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", duration: 500 }}
+          transition={{ type: "timing", duration: motion.slow }}
           style={styles.header}
         >
           <View style={styles.headerContent}>
@@ -134,7 +141,7 @@ export default function JobDetails() {
             </Text>
             <StatusPill status={job.status} style={styles.statusBadge} />
           </View>
-          <Text style={styles.companyName}>{job.company}</Text>
+          <Text variant="h4" color="secondary">{job.company}</Text>
         </MotiView>
 
         {/* Main Content Card */}
@@ -223,7 +230,7 @@ export default function JobDetails() {
                 <Text variant="h4" weight="medium" style={styles.sectionTitle}>
                   Notes
                 </Text>
-                <Text style={styles.notesText}>{job.notes}</Text>
+                <Text variant="bodySmall" style={styles.notesText}>{job.notes}</Text>
               </View>
             )}
           </Card>
@@ -233,7 +240,7 @@ export default function JobDetails() {
         <MotiView
           from={{ opacity: 0, translateY: 20 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", delay: 200, duration: 400 }}
+          transition={{ type: "timing", delay: 200, duration: motion.slow }}
           style={styles.statusSection}
         >
           <Text variant="h4" weight="medium" style={styles.sectionTitle}>
@@ -249,7 +256,7 @@ export default function JobDetails() {
         <MotiView
           from={{ opacity: 0, translateY: 20 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", delay: 300, duration: 400 }}
+          transition={{ type: "timing", delay: 300, duration: motion.slow }}
           style={styles.actionsContainer}
         >
           <Button
@@ -337,8 +344,8 @@ const createStyles = (theme: ThemeColors) =>
       flex: 1,
     },
     contentContainer: {
-      padding: 20,
-      paddingBottom: 40,
+      padding: dimensions.screenPadding,
+      paddingBottom: spacing.xxxl,
     },
     loadingContainer: {
       flex: 1,
@@ -350,57 +357,51 @@ const createStyles = (theme: ThemeColors) =>
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      padding: 20,
+      padding: spacing.xl,
       backgroundColor: theme.background,
     },
     backButton: {
-      marginTop: 20,
+      marginTop: spacing.lg,
     },
     header: {
-      marginBottom: 24,
+      marginBottom: dimensions.sectionGap,
     },
     headerContent: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 4,
+      marginBottom: spacing.xs,
     },
     title: {
       flex: 1,
-      marginRight: 12,
+      marginRight: spacing.md,
       color: theme.text.primary,
-    },
-    companyName: {
-      fontSize: 18,
-      color: theme.text.secondary,
     },
     statusBadge: {
       alignSelf: "flex-start",
     },
     mainCard: {
-      borderRadius: 12,
       overflow: "hidden",
-      marginBottom: 24,
-      backgroundColor: theme.card,
+      marginBottom: dimensions.sectionGap,
       borderWidth: 1,
       borderColor: theme.border,
     },
     section: {
-      padding: 20,
+      padding: dimensions.cardPadding,
     },
     sectionWithBorder: {
       borderTopWidth: 1,
       borderTopColor: theme.border,
     },
     sectionTitle: {
-      marginBottom: 16,
+      marginBottom: spacing.lg,
       color: theme.text.primary,
     },
     detailRow: {
       flexDirection: "row",
-      marginBottom: 16,
+      marginBottom: spacing.lg,
     },
     detailIcon: {
-      marginRight: 16,
+      marginRight: spacing.lg,
       marginTop: 2,
     },
     detailContent: {
@@ -417,18 +418,17 @@ const createStyles = (theme: ThemeColors) =>
       alignItems: "center",
     },
     linkChevron: {
-      marginLeft: 4,
+      marginLeft: spacing.xs,
     },
     notesText: {
       color: theme.text.primary,
-      lineHeight: 22,
     },
     statusSection: {
-      marginBottom: 24,
+      marginBottom: dimensions.sectionGap,
     },
     actionsContainer: {
       flexDirection: "row",
-      gap: 12,
+      gap: spacing.md,
     },
     actionButton: {
       flex: 1,

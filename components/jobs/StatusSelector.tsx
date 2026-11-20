@@ -3,6 +3,7 @@ import Button from "../ui/Button";
 import { useTheme } from "../../context/themeContext";
 import { JobStatus } from "../../constants/jobStatus";
 import { MotiView } from "moti";
+import { spacing } from "../../constants/design-tokens";
 
 const statusOptions: JobStatus[] = [
   "applied",
@@ -26,7 +27,7 @@ export default function StatusSelector({
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ gap: 8, paddingVertical: 4 }}
+      contentContainerStyle={{ gap: spacing.sm, paddingVertical: spacing.xs }}
     >
       {statusOptions.map((status, index) => (
         <MotiView

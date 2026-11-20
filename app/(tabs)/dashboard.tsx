@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet, View, RefreshControl, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ScrollView, StyleSheet, View, RefreshControl } from "react-native";
 import Text from "../../components/ui/Text";
 import Card from "../../components/ui/Card";
+import ScreenHeader from "../../components/ui/ScreenHeader";
 import ProgressChart from "../../components/dashboard/ProgressChart";
 import UpcomingReminders from "../../components/dashboard/UpcomingReminders";
 import { useTheme } from "../../context/themeContext";
@@ -10,6 +10,12 @@ import { ThemeColors } from "../../constants/colors";
 import { useJobs } from "../../context/jobContext";
 import { MotiView } from "moti";
 import { TrendingUp, Briefcase, CheckCircle, XCircle } from "lucide-react-native";
+import {
+  dimensions,
+  motion,
+  radius,
+  spacing,
+} from "../../constants/design-tokens";
 
 export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
@@ -36,7 +42,8 @@ export default function Dashboard() {
   ];
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    // Root layout already provides the top safe-area inset.
+    <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -48,17 +55,9 @@ export default function Dashboard() {
         <MotiView
           from={{ opacity: 0, translateY: -15 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ duration: 400, type: "timing" }}
-          style={styles.header}
+          transition={{ duration: motion.slow, type: "timing" }}
         >
-          <View>
-            <Text variant="h1" weight="bold" style={styles.headerTitle}>
-              Dashboard
-            </Text>
-            <Text variant="caption" color="secondary">
-              Your job hunt at a glance
-            </Text>
-          </View>
+          <ScreenHeader title="Dashboard" subtitle="Your job hunt at a glance" />
         </MotiView>
 
         {/* Stats Grid */}
@@ -75,10 +74,10 @@ export default function Dashboard() {
                 <View style={[styles.statIconWrap, { backgroundColor: stat.bg }]}>
                   {stat.icon}
                 </View>
-                <Text style={[styles.statValue, { color: stat.color }]} weight="bold">
+                <Text variant="h1" weight="bold" style={[styles.statValue, { color: stat.color }]}>
                   {stat.value}
                 </Text>
-                <Text variant="caption" color="secondary" style={styles.statLabel}>
+                <Text variant="label" color="secondary">
                   {stat.label}
                 </Text>
               </Card>
@@ -89,13 +88,14 @@ export default function Dashboard() {
         <MotiView
           from={{ opacity: 0, translateY: 20 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", duration: 500, delay: 300 }}
+          transition={{ type: "timing", duration: motion.slow, delay: 200 }}
+          style={styles.sections}
         >
           <ProgressChart jobs={jobs} />
           <UpcomingReminders jobs={jobs} />
         </MotiView>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -109,48 +109,37 @@ const createStyles = (theme: ThemeColors) => {
       flex: 1,
     },
     content: {
-      padding: 16,
-      paddingBottom: 40,
-    },
-    header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 24,
-      paddingHorizontal: 4,
-    },
-    headerTitle: {
-      fontSize: 30,
-      letterSpacing: -0.5,
+      // Horizontal padding lives on the sections (ScreenHeader pads
+      // itself), so the header title and the cards share one 16px edge.
+      paddingBottom: spacing.xxxl,
     },
     statsGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
-      marginBottom: 8,
-      gap: 12,
+      marginBottom: dimensions.sectionGap,
+      paddingHorizontal: dimensions.screenPadding,
+      gap: spacing.md,
+    },
+    sections: {
+      paddingHorizontal: dimensions.screenPadding,
     },
     statCardWrapper: {
       width: "47%",
     },
     statCard: {
-      padding: 16,
+      padding: dimensions.cardPadding,
       alignItems: "flex-start",
     },
     statIconWrap: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
+      width: spacing.huge,
+      height: spacing.huge,
+      borderRadius: radius.lg,
       justifyContent: "center",
       alignItems: "center",
-      marginBottom: 12,
+      marginBottom: spacing.md,
     },
     statValue: {
-      fontSize: 28,
-      lineHeight: 34,
-      marginBottom: 4,
-    },
-    statLabel: {
-      fontSize: 13,
+      marginBottom: spacing.xs,
     },
   });
 };

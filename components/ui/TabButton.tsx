@@ -1,5 +1,10 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useTheme } from "../../context/themeContext";
+import {
+  dimensions,
+  radius,
+  spacing,
+} from "../../constants/design-tokens";
 
 const TabButton = ({
   active,
@@ -21,6 +26,7 @@ const TabButton = ({
         active && { backgroundColor: theme.primaryLight },
       ]}
       onPress={onPress}
+      activeOpacity={0.75}
     >
       <View style={styles.tabContent}>
         {icon}
@@ -35,14 +41,17 @@ const TabButton = ({
 const styles = StyleSheet.create({
   tabButton: {
     flex: 1,
-    borderRadius: 8,
-    paddingVertical: 12,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    // Minimum 44x44 touch target.
+    minHeight: dimensions.minTouchTarget,
+    justifyContent: "center",
   },
   tabContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: spacing.sm,
   },
   tabText: {
     fontSize: 14,

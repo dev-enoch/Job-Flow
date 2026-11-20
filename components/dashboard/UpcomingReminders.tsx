@@ -7,6 +7,13 @@ import { JobApplication } from "../../types/jobs";
 import { useRouter } from "expo-router";
 import { useTheme } from "../../context/themeContext";
 import { MotiView } from "moti";
+import {
+  dimensions,
+  motion,
+  radius,
+  spacing,
+  touchHitSlop,
+} from "../../constants/design-tokens";
 
 interface UpcomingRemindersProps {
   jobs: JobApplication[];
@@ -36,14 +43,18 @@ export default function UpcomingReminders({ jobs }: UpcomingRemindersProps) {
     <MotiView
       from={{ opacity: 0, translateY: 15 }}
       animate={{ opacity: 1, translateY: 0 }}
-      transition={{ duration: 600, delay: 500 }}
+      transition={{ duration: motion.slow, delay: 200 }}
     >
       <Card variant="elevated" style={styles.card}>
         <View style={styles.header}>
           <Text variant="h3" weight="bold">
             Upcoming Follow-ups
           </Text>
-          <TouchableOpacity onPress={handleViewAll} style={styles.viewAll}>
+          <TouchableOpacity
+            onPress={handleViewAll}
+            style={styles.viewAll}
+            hitSlop={touchHitSlop}
+          >
             <Text color="primary" weight="medium">
               View all
             </Text>
@@ -57,10 +68,11 @@ export default function UpcomingReminders({ jobs }: UpcomingRemindersProps) {
               key={job.id}
               from={{ opacity: 0, translateX: -20 }}
               animate={{ opacity: 1, translateX: 0 }}
-              transition={{ delay: 600 + index * 150, type: "spring", damping: 14 }}
+              transition={{ delay: 200 + index * 100, type: "spring", damping: 14 }}
             >
               <TouchableOpacity
                 style={styles.reminderItem}
+                activeOpacity={0.8}
                 onPress={() => router.push(`/(modals)/job/${job.id}`)}
               >
                 <View style={styles.reminderIcon}>
@@ -93,38 +105,40 @@ export default function UpcomingReminders({ jobs }: UpcomingRemindersProps) {
 const createStyles = (theme: any) =>
   StyleSheet.create({
     card: {
-      marginBottom: 20,
+      // Last card on the dashboard; the screen's bottom padding applies.
+      marginBottom: 0,
     },
     header: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      marginBottom: 16,
+      marginBottom: spacing.lg,
     },
     viewAll: {
       flexDirection: "row",
       alignItems: "center",
+      paddingVertical: spacing.xs,
     },
     reminderItem: {
       flexDirection: "row",
-      paddingVertical: 12,
+      paddingVertical: spacing.md,
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
     },
     reminderIcon: {
       width: 36,
       height: 36,
-      borderRadius: 18,
+      borderRadius: radius.full,
       backgroundColor: theme.primaryLight,
       justifyContent: "center",
       alignItems: "center",
-      marginRight: 12,
+      marginRight: spacing.md,
     },
     reminderContent: {
       flex: 1,
     },
     emptyState: {
-      padding: 16,
+      padding: spacing.lg,
       alignItems: "center",
       justifyContent: "center",
     },

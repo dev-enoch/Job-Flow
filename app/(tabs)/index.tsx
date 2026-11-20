@@ -8,12 +8,11 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { RelativePathString, useRouter } from "expo-router";
 import { Plus, Search, X } from "lucide-react-native";
-import Text from "../../components/ui/Text";
 import JobCard from "../../components/jobs/JobCard";
 import EmptyState from "../../components/EmptyState";
+import ScreenHeader from "../../components/ui/ScreenHeader";
 import { JobApplication } from "../../types/jobs";
 import { searchJobs } from "../../utils/jobUtils";
 import { useTheme } from "../../context/themeContext";
@@ -21,6 +20,13 @@ import { useJobs } from "../../context/jobContext";
 import { ThemeColors } from "../../constants/colors";
 import { useAuth } from "../../context/authContext";
 import { MotiView } from "moti";
+import {
+  dimensions,
+  motion,
+  radius,
+  spacing,
+  touchHitSlop,
+} from "../../constants/design-tokens";
 
 const JobsScreen = () => {
   const router = useRouter();
@@ -77,21 +83,17 @@ const JobsScreen = () => {
   const styles = createStyles(theme);
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    // Root layout already provides the top safe-area inset.
+    <View style={styles.container}>
       <MotiView
         from={{ opacity: 0, translateY: -10 }}
         animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: "timing", duration: 400 }}
-        style={styles.header}
+        transition={{ type: "timing", duration: motion.slow }}
       >
-        <View>
-          <Text variant="h1" weight="bold" style={styles.headerTitle}>
-            Applications
-          </Text>
-          <Text variant="caption" color="secondary">
-            {jobs.length} total · {jobs.filter(j => j.status === "interviewing").length} interviewing
-          </Text>
-        </View>
+        <ScreenHeader
+          title="Applications"
+          subtitle={`${jobs.length} total · ${jobs.filter(j => j.status === "interviewing").length} interviewing`}
+        />
       </MotiView>
 
       <View style={[styles.searchContainer, searchFocused && styles.searchContainerFocused]}>
@@ -106,7 +108,11 @@ const JobsScreen = () => {
           onBlur={() => setSearchFocused(false)}
         />
         {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery("")}>
+          <TouchableOpacity
+            onPress={() => setSearchQuery("")}
+            hitSlop={touchHitSlop}
+            style={styles.clearButton}
+          >
             <X size={16} color={theme.text.secondary} />
           </TouchableOpacity>
         )}
@@ -146,7 +152,7 @@ const JobsScreen = () => {
       >
         <Plus size={26} color="white" strokeWidth={2.5} />
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -156,34 +162,23 @@ const createStyles = (theme: ThemeColors) => {
       flex: 1,
       backgroundColor: theme.background,
     },
-    header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingHorizontal: 20,
-      paddingVertical: 12,
-    },
-    headerTitle: {
-      fontSize: 30,
-      letterSpacing: -0.5,
-    },
     searchContainer: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: theme.card,
-      borderRadius: 14,
+      backgroundColor: theme.surface,
+      borderRadius: radius.lg,
       borderWidth: 1.5,
       borderColor: theme.border,
-      paddingHorizontal: 14,
-      marginHorizontal: 16,
-      marginBottom: 12,
-      height: 48,
+      paddingHorizontal: spacing.lg,
+      marginHorizontal: dimensions.screenPadding,
+      marginBottom: spacing.md,
+      height: dimensions.inputHeight,
     },
     searchContainerFocused: {
       borderColor: theme.primary,
     },
     searchIcon: {
-      marginRight: 10,
+      marginRight: spacing.sm,
     },
     searchInput: {
       flex: 1,
@@ -191,19 +186,22 @@ const createStyles = (theme: ThemeColors) => {
       fontFamily: "Inter-Regular",
       fontSize: 15,
     },
+    clearButton: {
+      padding: spacing.sm,
+    },
     listContent: {
-      paddingHorizontal: 16,
+      paddingHorizontal: dimensions.screenPadding,
       paddingBottom: 120,
       flexGrow: 1,
     },
     fab: {
       position: "absolute",
-      bottom: 24,
-      right: 24,
+      bottom: spacing.xxl,
+      right: spacing.xxl,
       width: 58,
       height: 58,
-      borderRadius: 29,
-      backgroundColor: theme.primary,
+      borderRadius: radius.full,
+      backgroundColor: theme.action,
       justifyContent: "center",
       alignItems: "center",
       elevation: 6,

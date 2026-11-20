@@ -4,60 +4,41 @@ import Text from "../../components/ui/Text";
 import Button from "../../components/ui/Button";
 import { useState, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
-import * as FileSystem from "expo-file-system";
 import { ThemeColors } from "../../constants/colors";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { CloudUpload, Smartphone, HardDrive, Clock, Cloud, Database, ShieldCheck } from "lucide-react-native";
+import { CloudUpload, Smartphone, HardDrive, Clock, Cloud, Database, ShieldCheck, Share2 } from "lucide-react-native";
 import Toast from "react-native-toast-message";
 import { useAuth } from "../../context/authContext";
 import { useBackup } from "../../utils/backup";
+import { useJobs } from "../../context/jobContext";
 import { MotiView } from "moti";
 import logger from "../../utils/logger";
+import {
+  dimensions,
+  motion,
+  radius,
+  spacing,
+} from "../../constants/design-tokens";
 
 export default function BackupDialog() {
   const { theme } = useTheme();
   const styles = createStyles(theme);
   const { user } = useAuth();
-  const { createBackup, getBackupInfo } = useBackup();
+  const { jobs } = useJobs();
+  const { exportLocalBackup, getLastLocalBackupDate, createBackup, getBackupInfo } = useBackup();
 
   const [lastBackupDate, setLastBackupDate] = useState<Date | null>(null);
   const [backupSize, setBackupSize] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [driveBackupInfo, setDriveBackupInfo] = useState<any>(null);
+  const [exportingLocal, setExportingLocal] = useState(false);
   const [uploadingToDrive, setUploadingToDrive] = useState(false);
 
   useEffect(() => {
     const prepareBackup = async () => {
       setLoading(true);
       try {
-        const keys = await AsyncStorage.getAllKeys();
-        const entries = await AsyncStorage.multiGet(keys);
-
-        const backupData = entries.reduce<Record<string, string>>(
-          (acc, [key, value]) => {
-            if (value !== null) {
-              acc[key] = value;
-            }
-            return acc;
-          },
-          {}
-        );
-
-        const json = JSON.stringify(backupData, null, 2);
-        const fileUri = FileSystem.documentDirectory + "jobflow_backup.json";
-
-        await FileSystem.writeAsStringAsync(fileUri, json, {
-          encoding: FileSystem.EncodingType.UTF8,
-        });
-
-        const fileInfo = await FileSystem.getInfoAsync(fileUri);
-        const fileSize =
-          fileInfo.exists && fileInfo.size ? fileInfo.size : null;
-
-        setBackupSize(fileSize);
-
-        const lastdate = await AsyncStorage.getItem("lastBackupDate");
-        setLastBackupDate(lastdate ? new Date(lastdate) : null);
+        const lastdate = await getLastLocalBackupDate();
+        setLastBackupDate(lastdate);
 
         if (user) {
           const driveInfo = await getBackupInfo();
@@ -65,9 +46,6 @@ export default function BackupDialog() {
         }
       } catch (error) {
         logger.error("Error preparing backup:", error);
-        setBackupSize(null);
-        setLastBackupDate(null);
-
         Toast.show({
           type: "error",
           text1: "Backup Error",
@@ -83,25 +61,28 @@ export default function BackupDialog() {
 
   const handleLocalBackup = async () => {
     try {
-      setLoading(true);
-      const currentDate = new Date();
-      await AsyncStorage.setItem("lastBackupDate", currentDate.toISOString());
-      setLastBackupDate(currentDate);
+      setExportingLocal(true);
+      // Writes jobflow_backup.json from SQLite and opens the share sheet
+      // so the file can be saved or sent anywhere. Works offline.
+      const result = await exportLocalBackup();
+      setBackupSize(result.size);
+      const now = new Date();
+      setLastBackupDate(now);
 
       Toast.show({
         type: "success",
-        text1: "Backup Successful",
-        text2: "Local backup created successfully.",
+        text1: "Backup Shared",
+        text2: `${result.jobCount} application${result.jobCount === 1 ? "" : "s"} exported to jobflow_backup.json.`,
       });
     } catch (error) {
       logger.error("Error creating local backup:", error);
       Toast.show({
         type: "error",
         text1: "Backup Error",
-        text2: "Failed to create local backup.",
+        text2: (error as Error).message || "Failed to create local backup.",
       });
     } finally {
-      setLoading(false);
+      setExportingLocal(false);
     }
   };
 
@@ -110,28 +91,12 @@ export default function BackupDialog() {
 
     try {
       setUploadingToDrive(true);
-      const keys = await AsyncStorage.getAllKeys();
-      const entries = await AsyncStorage.multiGet(keys);
-
-      const backupData = entries.reduce<Record<string, string>>(
-        (acc, [key, value]) => {
-          if (value !== null) {
-            acc[key] = value;
-          }
-          return acc;
-        },
-        {}
-      );
-
-      const success = await createBackup(backupData);
+      // Jobs are read from SQLite inside createBackup.
+      const success = await createBackup();
 
       if (success) {
         const driveInfo = await getBackupInfo();
         setDriveBackupInfo(driveInfo);
-
-        const currentDate = new Date();
-        await AsyncStorage.setItem("lastBackupDate", currentDate.toISOString());
-        setLastBackupDate(currentDate);
 
         Toast.show({
           type: "success",
@@ -182,7 +147,7 @@ export default function BackupDialog() {
       style={styles.container}
       from={{ opacity: 0, translateY: 15 }}
       animate={{ opacity: 1, translateY: 0 }}
-      transition={{ type: "timing", duration: 500 }}
+      transition={{ type: "timing", duration: motion.slow }}
     >
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
@@ -192,8 +157,8 @@ export default function BackupDialog() {
           <Text variant="h2" weight="bold" style={styles.title}>
             Backup Options
           </Text>
-          <Text style={styles.paragraph} align="center">
-            Safely store your job application data locally or in your Google Drive
+          <Text variant="bodySmall" color="secondary" style={styles.paragraph} align="center">
+            Safely store your job application data as a JSON file or in your Google Drive
             account to never lose your career progress.
           </Text>
         </View>
@@ -209,7 +174,7 @@ export default function BackupDialog() {
               <View style={styles.sectionHeader}>
                 <Database size={24} color={theme.text.primary} />
                 <Text variant="h3" weight="bold" style={styles.sectionTitle}>
-                  Local Backup
+                  Local Backup (JSON file)
                 </Text>
               </View>
               <View style={styles.cardContent}>
@@ -220,15 +185,24 @@ export default function BackupDialog() {
                 />
                 <InfoRow
                   icon={<HardDrive size={18} color={theme.primary} />}
-                  label="Backup Size"
+                  label="Last Export Size"
                   value={formatFileSize(backupSize)}
                 />
+                <InfoRow
+                  icon={<Database size={18} color={theme.primary} />}
+                  label="Applications"
+                  value={`${jobs.length} on this device`}
+                />
                 <Button
-                  title="Create Local Snapshot"
-                  leftIcon={<Database size={18} color={theme.background} />}
+                  title={exportingLocal ? "Preparing..." : "Export JSON Backup"}
+                  leftIcon={exportingLocal ? undefined : <Share2 size={18} color={theme.background} />}
                   onPress={handleLocalBackup}
+                  isLoading={exportingLocal}
                   style={styles.button}
                 />
+                <Text variant="caption" color="secondary" style={styles.hintText}>
+                  Opens the share sheet so you can save jobflow_backup.json to Files, Drive, email or anywhere else. No sign-in needed.
+                </Text>
               </View>
             </View>
 
@@ -296,37 +270,35 @@ const createStyles = (theme: ThemeColors) =>
     },
     header: {
       alignItems: "center",
-      padding: 24,
-      paddingTop: 32,
+      padding: spacing.xxl,
+      paddingTop: spacing.xxl,
     },
     headerIcon: {
-      width: 64,
-      height: 64,
-      borderRadius: 32,
+      width: spacing.display,
+      height: spacing.display,
+      borderRadius: radius.full,
       backgroundColor: theme.primaryLight,
       justifyContent: "center",
       alignItems: "center",
-      marginBottom: 16,
+      marginBottom: spacing.lg,
     },
     title: {
-      marginBottom: 8,
+      marginBottom: spacing.sm,
       color: theme.text.primary,
     },
     paragraph: {
-      color: theme.text.secondary,
-      lineHeight: 22,
       maxWidth: "90%",
     },
     loadingBox: {
-      padding: 40,
+      padding: spacing.huge,
       justifyContent: "center",
       alignItems: "center",
     },
     section: {
-      marginHorizontal: 20,
-      marginBottom: 20,
-      backgroundColor: theme.card,
-      borderRadius: 16,
+      marginHorizontal: dimensions.screenPadding,
+      marginBottom: dimensions.sectionGap,
+      backgroundColor: theme.surface,
+      borderRadius: radius.xl,
       shadowColor: theme.text.primary,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.05,
@@ -339,35 +311,39 @@ const createStyles = (theme: ThemeColors) =>
     sectionHeader: {
       flexDirection: "row",
       alignItems: "center",
-      padding: 20,
+      padding: dimensions.cardPadding,
       backgroundColor: theme.primaryLight + "30",
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
     },
     sectionTitle: {
-      marginLeft: 12,
+      marginLeft: spacing.md,
     },
     cardContent: {
-      padding: 20,
+      padding: dimensions.cardPadding,
     },
     infoRow: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 16,
+      marginBottom: spacing.lg,
     },
     iconContainer: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
+      width: spacing.huge,
+      height: spacing.huge,
+      borderRadius: radius.lg,
       backgroundColor: theme.primaryLight,
       justifyContent: "center",
       alignItems: "center",
-      marginRight: 16,
+      marginRight: spacing.lg,
     },
     infoContent: {
       flex: 1,
     },
     button: {
-      marginTop: 12,
+      marginTop: spacing.md,
+    },
+    hintText: {
+      marginTop: spacing.md,
+      textAlign: "center",
     },
   });

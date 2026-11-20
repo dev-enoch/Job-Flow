@@ -1,14 +1,22 @@
-import { View, StyleSheet, ScrollView, Alert, Linking, SafeAreaView } from "react-native";
+import { View, StyleSheet, ScrollView, Alert, Linking } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../context/themeContext";
 import { useRouter } from "expo-router";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Text from "../../components/ui/Text";
 import Card from "../../components/ui/Card";
+import ScreenHeader from "../../components/ui/ScreenHeader";
 import { useState } from "react";
 import { ThemeColors } from "../../constants/colors";
 import { MotiView } from "moti";
-import { ArrowLeft, Lightbulb, User, Mail, MessageSquareText, Send } from "lucide-react-native";
+import { Lightbulb, User, Mail, MessageSquareText, Send } from "lucide-react-native";
+import {
+  dimensions,
+  motion,
+  radius,
+  spacing,
+} from "../../constants/design-tokens";
 
 export default function FeatureRequestModal() {
   const { theme } = useTheme();
@@ -42,24 +50,15 @@ export default function FeatureRequestModal() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <Button
-          variant="outline"
-          title=""
-          leftIcon={<ArrowLeft size={20} color={theme.text.primary} />}
-          onPress={() => router.back()}
-          style={styles.backBtn}
-        />
-        <Text variant="h3" weight="bold" style={styles.headerTitle}>Feature Request</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    // Root layout owns the top inset; this modal owns the bottom one.
+    <SafeAreaView edges={["bottom"]} style={styles.safeArea}>
+      <ScreenHeader title="Feature Request" onBack={() => router.back()} />
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <MotiView
           from={{ opacity: 0, translateY: 15 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", duration: 500 }}
+          transition={{ type: "timing", duration: motion.slow }}
           style={styles.content}
         >
           <View style={styles.iconWrapper}>
@@ -71,7 +70,7 @@ export default function FeatureRequestModal() {
           <Text variant="h2" weight="bold" style={styles.title} align="center">
             Got an idea?
           </Text>
-          <Text style={styles.paragraph} align="center">
+          <Text variant="bodySmall" color="secondary" style={styles.paragraph} align="center">
             We're constantly improving JobFlow. Let us know what you want to see next!
           </Text>
 
@@ -81,7 +80,6 @@ export default function FeatureRequestModal() {
               placeholder="John Doe"
               value={name}
               onChangeText={setName}
-              style={styles.input}
               leftIcon={<User size={18} color={theme.text.secondary} />}
             />
 
@@ -92,7 +90,6 @@ export default function FeatureRequestModal() {
               autoCapitalize="none"
               value={email}
               onChangeText={setEmail}
-              style={styles.input}
               leftIcon={<Mail size={18} color={theme.text.secondary} />}
             />
 
@@ -126,68 +123,43 @@ const createStyles = (theme: ThemeColors) =>
       flex: 1,
       backgroundColor: theme.background,
     },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.border + "50",
-    },
-    backBtn: {
-      width: 44,
-      height: 44,
-      paddingHorizontal: 0,
-      justifyContent: 'center',
-      borderRadius: 22,
-    },
-    headerTitle: {
-      color: theme.text.primary,
-    },
     container: {
       flex: 1,
     },
     content: {
-      padding: 24,
-      paddingBottom: 40,
+      padding: dimensions.screenPadding,
+      paddingBottom: spacing.xxxl,
     },
     iconWrapper: {
       alignItems: 'center',
-      marginBottom: 20,
-      marginTop: 10,
+      marginBottom: spacing.xl,
+      marginTop: spacing.sm,
     },
     iconCircle: {
       width: 80,
       height: 80,
-      borderRadius: 40,
+      borderRadius: radius.full,
       backgroundColor: theme.warningLight,
       justifyContent: 'center',
       alignItems: 'center',
     },
     title: {
-      marginBottom: 8,
+      marginBottom: spacing.sm,
       color: theme.text.primary,
     },
     paragraph: {
-      marginBottom: 32,
-      color: theme.text.secondary,
-      lineHeight: 24,
-      paddingHorizontal: 10,
+      marginBottom: spacing.xxxl,
+      paddingHorizontal: spacing.sm,
     },
     card: {
-      padding: 24,
-    },
-    input: {
-      marginBottom: 20,
+      padding: dimensions.cardPadding,
     },
     textArea: {
       height: 140,
-      marginBottom: 32,
       textAlignVertical: "top",
     },
     submitButton: {
       width: '100%',
-      borderRadius: 24,
+      borderRadius: radius.xxl,
     },
   });

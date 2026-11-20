@@ -7,6 +7,7 @@ import Card from "../ui/Card";
 import Text from "../ui/Text";
 import { useTheme } from "../../context/themeContext";
 import { JobApplication } from "../../types/jobs";
+import { radius, spacing } from "../../constants/design-tokens";
 
 interface JobCardProps {
   job: JobApplication;
@@ -37,19 +38,19 @@ export default function JobCard({ job, index, onPress }: JobCardProps) {
         <Card variant="elevated" style={styles.card}>
           <View style={styles.mainContent}>
             <View style={styles.textContent}>
-              <Text weight="bold" style={styles.roleTitle} numberOfLines={1}>
+              <Text variant="body" weight="bold" style={styles.roleTitle} numberOfLines={1}>
                 {job.role}
               </Text>
               <View style={styles.metaRow}>
-                <Building2 size={13} color={theme.text.secondary} />
-                <Text style={styles.companyText} numberOfLines={1}>
+                <Building2 size={14} color={theme.text.secondary} />
+                <Text variant="label" color="secondary" style={styles.companyText} numberOfLines={1}>
                   {job.company}
                 </Text>
                 {job.location && (
                   <>
                     <View style={styles.dotSeparator} />
-                    <MapPin size={13} color={theme.text.secondary} />
-                    <Text style={styles.locationText} numberOfLines={1}>
+                    <MapPin size={14} color={theme.text.secondary} />
+                    <Text variant="label" color="secondary" style={styles.locationText} numberOfLines={1}>
                       {job.location}
                     </Text>
                   </>
@@ -64,7 +65,7 @@ export default function JobCard({ job, index, onPress }: JobCardProps) {
             <StatusBadge status={job.status} />
             <View style={styles.dateWrap}>
               <Calendar size={12} color={theme.text.secondary} />
-              <Text style={styles.dateText}>
+              <Text variant="caption" color="secondary">
                 {format(new Date(job.dateApplied), "MMM d, yyyy")}
               </Text>
             </View>
@@ -78,10 +79,9 @@ export default function JobCard({ job, index, onPress }: JobCardProps) {
 const createStyles = (theme: any) =>
   StyleSheet.create({
     container: {
-      marginBottom: 12,
+      marginBottom: spacing.md,
     },
     card: {
-      padding: 16,
       borderLeftWidth: 3,
       borderLeftColor: theme.primary + "40",
     },
@@ -89,16 +89,15 @@ const createStyles = (theme: any) =>
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "flex-start",
-      marginBottom: 12,
+      marginBottom: spacing.md,
     },
     textContent: {
       flex: 1,
-      marginRight: 8,
+      marginRight: spacing.sm,
     },
     roleTitle: {
-      fontSize: 16,
       color: theme.text.primary,
-      marginBottom: 6,
+      marginBottom: spacing.sm,
       letterSpacing: -0.2,
     },
     metaRow: {
@@ -106,23 +105,19 @@ const createStyles = (theme: any) =>
       alignItems: "center",
     },
     companyText: {
-      fontSize: 13,
-      color: theme.text.secondary,
       marginLeft: 5,
-      marginRight: 4,
+      marginRight: spacing.xs,
     },
     locationText: {
-      fontSize: 13,
-      color: theme.text.secondary,
       marginLeft: 5,
       maxWidth: 100,
     },
     dotSeparator: {
       width: 3,
       height: 3,
-      borderRadius: 1.5,
+      borderRadius: radius.full,
       backgroundColor: theme.border,
-      marginHorizontal: 6,
+      marginHorizontal: spacing.sm,
     },
     footer: {
       flexDirection: "row",
@@ -132,10 +127,6 @@ const createStyles = (theme: any) =>
     dateWrap: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 4,
-    },
-    dateText: {
-      fontSize: 12,
-      color: theme.text.secondary,
+      gap: spacing.xs,
     },
   });

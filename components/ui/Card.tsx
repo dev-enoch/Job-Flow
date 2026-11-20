@@ -1,6 +1,11 @@
 import React from "react";
 import { View, StyleSheet, ViewProps, ViewStyle } from "react-native";
 import { useTheme } from "../../context/themeContext";
+import {
+  dimensions,
+  radius,
+  spacing,
+} from "../../constants/design-tokens";
 
 interface CardProps extends ViewProps {
   variant?: "default" | "elevated" | "outline";
@@ -18,8 +23,8 @@ export default function Card({
 
   const dynamicStyles = StyleSheet.create({
     base: {
-      borderRadius: 16, // Softer curves for modern feel
-      backgroundColor: theme.card,
+      borderRadius: radius.xl, // 16 — card radius from the design guide
+      backgroundColor: theme.surface,
     },
     default: {
       // no extra styles, just for TypeScript
@@ -41,9 +46,9 @@ export default function Card({
 
   const paddingStyles: Record<NonNullable<CardProps["padding"]>, ViewStyle> = {
     none: { padding: 0 },
-    small: { padding: 12 },
-    medium: { padding: 16 },
-    large: { padding: 24 },
+    small: { padding: spacing.md },
+    medium: { padding: dimensions.cardPadding },
+    large: { padding: spacing.xxl },
   };
 
   return (

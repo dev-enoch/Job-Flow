@@ -1,16 +1,7 @@
 import { View, StyleSheet } from "react-native";
 import Text from "../ui/Text";
-import { useTheme } from "../../context/themeContext";
-import { JobStatus } from "../../constants/jobStatus";
-
-const statusColors = {
-  applied: { bg: "#EFF6FF", text: "#2563EB" },
-  interviewing: { bg: "#F0FDF4", text: "#16A34A" },
-  offered: { bg: "#ECFDF5", text: "#059669" },
-  accepted: { bg: "#ECFDF5", text: "#047857" },
-  rejected: { bg: "#FEF2F2", text: "#DC2626" },
-  declined: { bg: "#FFF7ED", text: "#EA580C" },
-};
+import { JobStatus, useStatusConfig } from "../../constants/jobStatus";
+import { radius, spacing } from "../../constants/design-tokens";
 
 export default function StatusPill({
   status,
@@ -19,17 +10,15 @@ export default function StatusPill({
   status: JobStatus;
   style?: any;
 }) {
-  const { theme } = useTheme();
-  const colors = statusColors[status];
+  // Theme-aware colours from the shared status config (the previous
+  // hardcoded light-mode hex values looked wrong in dark mode).
+  const { statusConfig } = useStatusConfig();
+  const { color, background, label } = statusConfig[status];
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }, style]}>
-      <Text
-        variant="label"
-        style={[styles.text, { color: colors.text }]}
-        weight="medium"
-      >
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+    <View style={[styles.container, { backgroundColor: background }, style]}>
+      <Text variant="label" style={{ color }} weight="medium">
+        {label}
       </Text>
     </View>
   );
@@ -37,12 +26,9 @@ export default function StatusPill({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
     alignSelf: "flex-start",
-  },
-  text: {
-    fontSize: 13,
   },
 });

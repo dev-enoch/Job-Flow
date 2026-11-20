@@ -1,11 +1,19 @@
-import { SafeAreaView, StyleSheet, ScrollView, View } from "react-native";
+import { StyleSheet, ScrollView, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../context/themeContext";
 import { useRouter } from "expo-router";
 import Button from "../../components/ui/Button";
 import Text from "../../components/ui/Text";
 import Card from "../../components/ui/Card";
+import ScreenHeader from "../../components/ui/ScreenHeader";
 import { MotiView } from "moti";
-import { ShieldCheck, ArrowLeft, Shield } from "lucide-react-native";
+import { ShieldCheck, Shield } from "lucide-react-native";
+import {
+  dimensions,
+  motion,
+  radius,
+  spacing,
+} from "../../constants/design-tokens";
 
 export default function PrivacyModal() {
   const { theme } = useTheme();
@@ -13,18 +21,9 @@ export default function PrivacyModal() {
   const styles = createStyles(theme);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <Button
-          variant="outline"
-          title=""
-          leftIcon={<ArrowLeft size={20} color={theme.text.primary} />}
-          onPress={() => router.back()}
-          style={styles.backBtn}
-        />
-        <Text variant="h3" weight="bold" style={styles.headerTitle}>Privacy Policy</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    // Root layout owns the top inset; this modal owns the bottom one.
+    <SafeAreaView edges={["bottom"]} style={styles.safeArea}>
+      <ScreenHeader title="Privacy Policy" onBack={() => router.back()} />
 
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <MotiView
@@ -41,10 +40,10 @@ export default function PrivacyModal() {
         <MotiView
           from={{ opacity: 0, translateY: 15 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", duration: 500, delay: 100 }}
+          transition={{ type: "timing", duration: motion.slow, delay: 100 }}
         >
           <Card variant="elevated" style={styles.card}>
-            <Text style={styles.introParagraph}>
+            <Text variant="bodySmall" align="center" style={styles.introParagraph}>
               At JobFlow, we take your privacy seriously. This Privacy Policy
               explains our simple and transparent approach: we do not collect or
               store any personal data.
@@ -52,9 +51,9 @@ export default function PrivacyModal() {
 
             <View style={styles.sectionHeader}>
               <Shield size={16} color={theme.primary} />
-              <Text style={styles.sectionTitle}>1. Data Collection</Text>
+              <Text variant="body" weight="bold" style={styles.sectionTitle}>1. Data Collection</Text>
             </View>
-            <Text style={styles.paragraph}>
+            <Text variant="bodySmall" color="secondary" style={styles.paragraph}>
               JobFlow does not collect, track, or analyze any personal data, usage
               data, or device metadata. We believe your job search is your private
               business.
@@ -62,9 +61,9 @@ export default function PrivacyModal() {
 
             <View style={styles.sectionHeader}>
               <Shield size={16} color={theme.primary} />
-              <Text style={styles.sectionTitle}>2. Backups & Data Storage</Text>
+              <Text variant="body" weight="bold" style={styles.sectionTitle}>2. Backups & Data Storage</Text>
             </View>
-            <Text style={styles.paragraph}>
+            <Text variant="bodySmall" color="secondary" style={styles.paragraph}>
               All your job data, including resumes, notes, and tracking history, is
               stored locally on your device. When you choose to back up your data,
               it is saved securely to your own Google Drive account — not ours.
@@ -75,9 +74,9 @@ export default function PrivacyModal() {
 
             <View style={styles.sectionHeader}>
               <Shield size={16} color={theme.primary} />
-              <Text style={styles.sectionTitle}>3. No Analytics or Tracking</Text>
+              <Text variant="body" weight="bold" style={styles.sectionTitle}>3. No Analytics or Tracking</Text>
             </View>
-            <Text style={styles.paragraph}>
+            <Text variant="bodySmall" color="secondary" style={styles.paragraph}>
               We do not use analytics tools, trackers, or advertising identifiers.
               We simply don’t track anything — no session data, no usage behavior,
               and no personal identifiers.
@@ -85,9 +84,9 @@ export default function PrivacyModal() {
 
             <View style={styles.sectionHeader}>
               <Shield size={16} color={theme.primary} />
-              <Text style={styles.sectionTitle}>4. Your Control</Text>
+              <Text variant="body" weight="bold" style={styles.sectionTitle}>4. Your Control</Text>
             </View>
-            <Text style={styles.paragraph}>
+            <Text variant="bodySmall" color="secondary" style={styles.paragraph}>
               You’re in full control of your data. If you uninstall the app, all
               stored data on your device is removed. Likewise, you can delete
               backups from your Google Drive at any time.
@@ -95,9 +94,9 @@ export default function PrivacyModal() {
 
             <View style={styles.sectionHeader}>
               <Shield size={16} color={theme.primary} />
-              <Text style={styles.sectionTitle}>5. Contact</Text>
+              <Text variant="body" weight="bold" style={styles.sectionTitle}>5. Contact</Text>
             </View>
-            <Text style={styles.paragraph}>
+            <Text variant="bodySmall" color="secondary" style={styles.paragraph}>
               Questions or feedback? Reach out to us at: support@jobflowapp.com
             </Text>
 
@@ -119,38 +118,19 @@ const createStyles = (theme: any) =>
       flex: 1,
       backgroundColor: theme.background,
     },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.border + "50",
-    },
-    backBtn: {
-      width: 44,
-      height: 44,
-      paddingHorizontal: 0,
-      justifyContent: 'center',
-      borderRadius: 22,
-    },
-    headerTitle: {
-      color: theme.text.primary,
-    },
     container: {
-      padding: 16,
-      paddingBottom: 40,
+      padding: dimensions.screenPadding,
+      paddingBottom: spacing.xxxl,
     },
     iconContainer: {
       alignItems: 'center',
-      marginBottom: 24,
-      marginTop: 16,
+      marginBottom: dimensions.sectionGap,
+      marginTop: spacing.lg,
     },
     iconCircle: {
       width: 80,
       height: 80,
-      borderRadius: 40,
+      borderRadius: radius.full,
       backgroundColor: theme.successLight,
       justifyContent: 'center',
       alignItems: 'center',
@@ -161,34 +141,27 @@ const createStyles = (theme: any) =>
       elevation: 6,
     },
     card: {
-      padding: 20,
+      padding: dimensions.cardPadding,
     },
     introParagraph: {
-      marginBottom: 32,
+      marginBottom: spacing.xxxl,
       color: theme.text.primary,
-      lineHeight: 24,
-      fontSize: 15,
-      textAlign: 'center',
     },
     sectionHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginTop: 20,
-      marginBottom: 8,
-      gap: 8,
+      marginTop: spacing.xl,
+      marginBottom: spacing.sm,
+      gap: spacing.sm,
     },
     sectionTitle: {
-      fontWeight: "bold",
       color: theme.text.primary,
     },
     paragraph: {
-      color: theme.text.secondary,
-      lineHeight: 24,
-      fontSize: 14,
-      paddingLeft: 24,
+      paddingLeft: dimensions.sectionGap,
     },
     button: {
-      marginTop: 32,
-      borderRadius: 24,
+      marginTop: spacing.xxxl,
+      borderRadius: radius.xxl,
     },
   });

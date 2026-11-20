@@ -9,9 +9,11 @@ import {
   Platform,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Text from "../../../../components/ui/Text";
 import Button from "../../../../components/ui/Button";
+import ScreenHeader from "../../../../components/ui/ScreenHeader";
 import { useTheme } from "../../../../context/themeContext";
 import { jobStatusEnum } from "../../../../constants/jobStatus";
 import {
@@ -34,6 +36,12 @@ import Input from "../../../../components/ui/Input";
 import { JobApplication } from "../../../../types/jobs";
 import { MotiView } from "moti";
 import logger from "../../../../utils/logger";
+import {
+  dimensions,
+  motion,
+  radius,
+  spacing,
+} from "../../../../constants/design-tokens";
 
 const jobSchema = z.object({
   company: z.string().min(1, "Company name is required"),
@@ -78,7 +86,7 @@ export default function EditJobModal() {
       dateApplied: new Date().toISOString().substring(0, 10),
       status: "applied",
       url: "",
-      followUpDate: "".substring(0, 10),
+      followUpDate: "",
       notes: "",
       contactPerson: "",
       contactEmail: "",
@@ -142,23 +150,22 @@ export default function EditJobModal() {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={{ flex: 1 }}
-    >
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.contentContainer}
+    // Root layout owns the top inset; this screen owns the bottom one.
+    <SafeAreaView edges={["bottom"]} style={styles.safeArea}>
+      <ScreenHeader title="Edit Job Application" onBack={() => router.back()} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
       >
-        <MotiView
-          from={{ opacity: 0, translateY: 15 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", duration: 500 }}
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.contentContainer}
         >
-          <Text variant="h3" weight="bold" style={styles.title}>
-            Edit Job Application
-          </Text>
-
+          <MotiView
+            from={{ opacity: 0, translateY: 15 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: "timing", duration: motion.slow }}
+          >
           <Controller
             control={control}
             name="company"
@@ -247,7 +254,7 @@ export default function EditJobModal() {
             name="status"
             render={({ field }) => (
               <View style={styles.inputWrapper}>
-                <Text variant="label" style={styles.label}>
+                <Text variant="label" weight="medium" color="secondary" style={styles.label}>
                   Status
                 </Text>
                 <View style={styles.pickerContainer}>
@@ -374,59 +381,58 @@ export default function EditJobModal() {
         </MotiView>
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const createStyles = (theme: ThemeColors) =>
   StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
     container: {
       flex: 1,
       backgroundColor: theme.background,
     },
     contentContainer: {
-      padding: 16,
-      paddingBottom: 40,
-    },
-    title: {
-      marginBottom: 24,
-      color: theme.text.primary,
+      padding: dimensions.screenPadding,
+      paddingBottom: spacing.xxxl,
     },
     textArea: {
       height: 100,
       textAlignVertical: "top",
-      paddingTop: 8,
+      paddingTop: spacing.sm,
     },
     buttonsContainer: {
       flexDirection: "row",
       justifyContent: "space-between",
-      marginTop: 16,
+      marginTop: spacing.lg,
     },
     cancelButton: {
       flex: 1,
-      marginRight: 8,
+      marginRight: spacing.sm,
     },
     saveButton: {
       flex: 1,
-      marginLeft: 8,
+      marginLeft: spacing.sm,
     },
     inputWrapper: {
-      marginBottom: 16,
+      marginBottom: spacing.lg,
     },
     label: {
-      color: theme.text.primary,
-      marginBottom: 6,
-      fontSize: 16,
+      marginBottom: spacing.sm,
     },
     pickerContainer: {
       borderWidth: 1,
       borderColor: theme.border,
-      borderRadius: 8,
+      borderRadius: radius.lg,
       backgroundColor: theme.background,
       overflow: "hidden",
     },
     picker: {
       color: theme.text.primary,
-      height: 48,
-      paddingHorizontal: 10,
+      height: dimensions.inputHeight,
+      paddingHorizontal: spacing.sm,
     },
   });

@@ -5,6 +5,7 @@ import Button from "./ui/Button";
 import { useTheme } from "../context/themeContext";
 import { MotiView } from "moti";
 import { ThemeColors } from "../constants/colors";
+import { motion, radius, spacing } from "../constants/design-tokens";
 
 interface EmptyStateProps {
   title: string;
@@ -49,14 +50,14 @@ export default function EmptyState({
       <Text variant="h2" weight="bold" align="center" style={styles.title}>
         {title}
       </Text>
-      <Text color="secondary" align="center" style={styles.message}>
+      <Text variant="bodySmall" color="secondary" align="center" style={styles.message}>
         {message}
       </Text>
       {action && (
         <MotiView
           from={{ opacity: 0, translateY: 10 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", delay: 200, duration: 500 }}
+          transition={{ type: "timing", delay: 200, duration: motion.slow }}
         >
           <Button
             title={action.label}
@@ -75,16 +76,16 @@ const createStyles = (theme: ThemeColors) =>
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      padding: 24,
-      marginTop: 60,
+      padding: spacing.xxl,
+      marginTop: spacing.giant,
     },
     iconContainer: {
-      marginBottom: 32,
+      marginBottom: spacing.xxxl,
     },
     iconBackground: {
       width: 120,
       height: 120,
-      borderRadius: 60,
+      borderRadius: radius.full,
       backgroundColor: theme.primaryLight,
       justifyContent: "center",
       alignItems: "center",
@@ -95,17 +96,15 @@ const createStyles = (theme: ThemeColors) =>
       elevation: 5,
     },
     title: {
-      marginBottom: 12,
+      marginBottom: spacing.md,
       color: theme.text.primary,
     },
     message: {
-      marginBottom: 32,
+      marginBottom: spacing.xxxl,
       maxWidth: 280,
-      lineHeight: 22,
-      fontSize: 15,
     },
     button: {
       minWidth: 180,
-      borderRadius: 24,
+      borderRadius: radius.xxl,
     },
   });

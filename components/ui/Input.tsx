@@ -8,6 +8,11 @@ import {
 } from "react-native";
 import Text from "./Text";
 import { useTheme } from "../../context/themeContext";
+import {
+  dimensions,
+  radius,
+  spacing,
+} from "../../constants/design-tokens";
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -74,17 +79,17 @@ export default function Input({
 const createStyles = (theme: any) => {
   return StyleSheet.create({
     container: {
-      marginBottom: 16,
+      marginBottom: spacing.lg,
     },
     label: {
-      marginBottom: 6,
+      marginBottom: spacing.sm,
     },
     inputContainer: {
       flexDirection: "row",
       alignItems: "center",
       borderWidth: 1,
       borderColor: theme.border,
-      borderRadius: 8,
+      borderRadius: radius.lg,
       backgroundColor: theme.background,
     },
     inputFocused: {
@@ -95,26 +100,27 @@ const createStyles = (theme: any) => {
     },
     input: {
       flex: 1,
-      height: Platform.OS === "web" ? 40 : 48,
+      // Guide: input height 48–52 (50 standard); web keeps its 40.
+      height: Platform.OS === "web" ? 40 : dimensions.inputHeight,
       color: theme.text.primary,
-      paddingHorizontal: 12,
+      paddingHorizontal: spacing.md,
       fontSize: 16,
       fontFamily: "Inter-Regular",
     },
     inputWithLeftIcon: {
-      paddingLeft: 8,
+      paddingLeft: spacing.sm,
     },
     inputWithRightIcon: {
-      paddingRight: 8,
+      paddingRight: spacing.sm,
     },
     leftIcon: {
-      paddingLeft: 12,
+      paddingLeft: spacing.md,
     },
     rightIcon: {
-      paddingRight: 12,
+      paddingRight: spacing.md,
     },
     error: {
-      marginTop: 4,
+      marginTop: spacing.xs,
     },
   });
 };

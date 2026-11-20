@@ -4,12 +4,14 @@ import uuid from "react-native-uuid";
 import { JobStatus } from "../constants/jobStatus";
 import * as SQLite from 'expo-sqlite';
 import logger from "../utils/logger";
+import { jobApplicationSchema } from "../schemas/job";
 
 const JOBS_STORAGE_KEY = "jobtracker_jobs"; // For migration
 const LAST_SYNC_KEY = "jobtracker_last_sync";
 const PENDING_CHANGES_KEY = "jobtracker_pending_changes";
 
-interface PendingChange {
+export interface PendingChange {
+    id?: number;
     type: "create" | "update" | "delete";
     job: JobApplication;
     timestamp: number;
@@ -18,11 +20,16 @@ interface PendingChange {
 class JobService {
     private db: SQLite.SQLiteDatabase;
     private isInitialized: boolean = false;
+    // Resolves once the first-launch AsyncStorage migration has finished.
+    // Public methods await it so a read can never race the migration and
+    // return an empty list while old jobs are still being copied over.
+    private ready: Promise<void>;
 
     constructor() {
         // Open synchronously, this uses expo-sqlite SDK 51+ patterns
         this.db = SQLite.openDatabaseSync("jobflow.db");
         this.initDB();
+        this.ready = this.migrateFromAsyncStorage();
     }
 
     private initDB() {
@@ -54,7 +61,6 @@ class JobService {
         );
       `);
             this.isInitialized = true;
-            this.migrateFromAsyncStorage();
         } catch (e) {
             logger.error("Failed to init SQLite", e);
         }
@@ -63,20 +69,22 @@ class JobService {
     private async migrateFromAsyncStorage() {
         try {
             const data = await AsyncStorage.getItem(JOBS_STORAGE_KEY);
-            if (data) {
-                const oldJobs: JobApplication[] = JSON.parse(data);
-                if (oldJobs.length > 0) {
-                    // Check if we already have jobs in sqlite
-                    const existing = await this.getLocalJobs();
-                    if (existing.length === 0) {
-                        logger.log("Migrating", oldJobs.length, "jobs from AsyncStorage to SQLite");
-                        for (const job of oldJobs) {
-                            await this.privateAddJob(job);
-                        }
-                        // Clear async storage once migration is verified
-                        await AsyncStorage.removeItem(JOBS_STORAGE_KEY);
-                    }
+            if (!data) return;
+            const oldJobs: JobApplication[] = JSON.parse(data);
+            if (oldJobs.length === 0) return;
+            // Only migrate into an empty SQLite store, and query the table
+            // directly here (not via getLocalJobs) to avoid awaiting our own
+            // migration promise.
+            const existing = await this.db.getAllAsync<{ id: string }>(
+                `SELECT id FROM jobs LIMIT 1`
+            );
+            if (existing.length === 0) {
+                logger.log("Migrating", oldJobs.length, "jobs from AsyncStorage to SQLite");
+                for (const job of oldJobs) {
+                    await this.privateAddJob(job);
                 }
+                // Clear async storage once migration is verified
+                await AsyncStorage.removeItem(JOBS_STORAGE_KEY);
             }
         } catch (e) {
             logger.error("Error migrating from AsyncStorage", e);
@@ -102,6 +110,7 @@ class JobService {
     }
 
     async getLocalJobs(): Promise<JobApplication[]> {
+        await this.ready;
         try {
             const rows = await this.db.getAllAsync<{
                 id: string; company: string; role: string; location: string;
@@ -132,12 +141,14 @@ class JobService {
     }
 
     async getPendingChanges(): Promise<PendingChange[]> {
+        await this.ready;
         try {
             const rows = await this.db.getAllAsync<{
-                type: string; jobId: string; timestamp: number; jobData: string;
+                id: number; type: string; jobId: string; timestamp: number; jobData: string;
             }>(`SELECT * FROM pending_changes ORDER BY timestamp ASC`);
 
             return rows.map(row => ({
+                id: row.id,
                 type: row.type as "create" | "update" | "delete",
                 timestamp: row.timestamp,
                 job: JSON.parse(row.jobData)
@@ -146,6 +157,67 @@ class JobService {
             logger.error("Error reading pending changes:", error);
             return [];
         }
+    }
+
+    /**
+     * Replay the offline pending-change queue through a caller-supplied sync
+     * handler (for example a future backend sync). Each change the handler
+     * reports as synced is removed from the queue; failures stay queued for
+     * the next attempt. Returns how many were replayed and how many remain.
+     */
+    async replayPendingChanges(
+        replay: (change: PendingChange) => Promise<boolean>
+    ): Promise<{ replayed: number; remaining: number }> {
+        await this.ready;
+        const pending = await this.getPendingChanges();
+        let replayed = 0;
+        for (const change of pending) {
+            try {
+                const ok = await replay(change);
+                if (ok && change.id !== undefined) {
+                    await this.db.runAsync(
+                        `DELETE FROM pending_changes WHERE id = ?`,
+                        [change.id]
+                    );
+                    replayed++;
+                }
+            } catch (error) {
+                logger.error("Failed to replay pending change:", error);
+            }
+        }
+        const remaining = (await this.getPendingChanges()).length;
+        return { replayed, remaining };
+    }
+
+    async clearPendingChanges(): Promise<void> {
+        await this.ready;
+        await this.db.runAsync(`DELETE FROM pending_changes`);
+    }
+
+    /**
+     * Import jobs from an untrusted source (for example a JSON backup file).
+     * Each entry is validated against the job schema; invalid entries are
+     * skipped and counted. Valid jobs are upserted by id and queued as
+     * pending changes so a later sync can replay them.
+     */
+    async importJobs(
+        jobs: unknown[]
+    ): Promise<{ imported: number; skipped: number }> {
+        await this.ready;
+        let imported = 0;
+        let skipped = 0;
+        for (const raw of jobs) {
+            try {
+                const job = jobApplicationSchema.parse(raw);
+                await this.privateAddJob(job);
+                await this.addPendingChange("update", job);
+                imported++;
+            } catch (error) {
+                logger.error("Skipping invalid job in import:", error);
+                skipped++;
+            }
+        }
+        return { imported, skipped };
     }
 
     async addPendingChange(type: "create" | "update" | "delete", job: JobApplication): Promise<void> {
@@ -173,6 +245,7 @@ class JobService {
     }
 
     async addJob(job: JobApplication): Promise<void> {
+        await this.ready;
         try {
             await this.privateAddJob(job);
             await this.addPendingChange("create", job);
@@ -183,6 +256,7 @@ class JobService {
     }
 
     async updateJob(job: JobApplication): Promise<void> {
+        await this.ready;
         try {
             // Since privateAddJob uses INSERT OR REPLACE, it behaves correctly for updates on the PK
             await this.privateAddJob(job);
@@ -194,6 +268,7 @@ class JobService {
     }
 
     async deleteJob(jobId: string): Promise<void> {
+        await this.ready;
         try {
             // Fetch before deleting to store in pending changes
             const jobRows = await this.db.getAllAsync<{
@@ -237,6 +312,7 @@ class JobService {
     }
 
     async clearAllJobs(): Promise<void> {
+        await this.ready;
         try {
             await this.db.runAsync(`DELETE FROM jobs`);
             await this.db.runAsync(`DELETE FROM pending_changes`);

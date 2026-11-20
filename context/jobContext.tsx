@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { JobApplication } from "../types/jobs";
 import { addJob, deleteJob, getJobs, updateJob } from "../utils/storage";
+import { rescheduleAllJobReminders } from "./NotificationContext";
 import { showToast } from "../utils/toast";
 import logger from "../utils/logger";
 
@@ -41,6 +42,9 @@ export const JobsProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       await addJob(job);
       await refreshJobs();
+      // Keep local notification reminders in step with the new job. A
+      // reminder failure must never break the save, so this is fire-and-forget.
+      void rescheduleAllJobReminders();
       showToast.job(
         "Application Added 🎉",
         `${job.role} at ${job.company} has been saved.`
@@ -56,6 +60,7 @@ export const JobsProvider = ({ children }: { children: React.ReactNode }) => {
       const jobToDelete = jobs.find((j) => j.id === id);
       await deleteJob(id);
       await refreshJobs();
+      void rescheduleAllJobReminders();
       showToast.success(
         "Application Removed",
         jobToDelete
@@ -72,6 +77,7 @@ export const JobsProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       await updateJob(job);
       await refreshJobs();
+      void rescheduleAllJobReminders();
       showToast.success(
         "Application Updated ✓",
         `${job.role} at ${job.company} has been updated.`

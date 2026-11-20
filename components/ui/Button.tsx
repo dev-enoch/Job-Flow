@@ -8,6 +8,7 @@ import {
 import Text from "./Text";
 import { useTheme } from "../../context/themeContext";
 import { getColors } from "../../constants/colors";
+import { dimensions, radius, spacing } from "../../constants/design-tokens";
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
@@ -38,7 +39,7 @@ export default function Button({
   const buttonStyles = [
     styles.base,
     styles[size],
-    variant === "primary" && { backgroundColor: colors.primary },
+    variant === "primary" && { backgroundColor: colors.action },
     variant === "secondary" && { backgroundColor: colors.secondary },
     variant === "outline" && {
       backgroundColor: "transparent",
@@ -54,7 +55,7 @@ export default function Button({
 
   const textColor =
     variant === "primary"
-      ? colors.text.white
+      ? colors.onAction
       : variant === "secondary"
       ? colors.primary
       : variant === "outline"
@@ -67,6 +68,8 @@ export default function Button({
     <TouchableOpacity
       style={buttonStyles}
       disabled={disabled || isLoading}
+      // Visible press feedback; motion tokens run 150–300ms.
+      activeOpacity={0.75}
       {...props}
     >
       <View style={styles.content}>
@@ -75,14 +78,14 @@ export default function Button({
         )}
         {isLoading ? (
           <ActivityIndicator
-            color={variant === "primary" ? colors.text.white : colors.primary}
+            color={variant === "primary" ? colors.onAction : colors.primary}
             size="small"
           />
         ) : (
           <Text
             weight="medium"
             color={color ? color : textColor}
-            variant={size === "small" ? "caption" : "body"}
+            variant={size === "small" ? "label" : "body"}
           >
             {title}
           </Text>
@@ -97,21 +100,26 @@ export default function Button({
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: 8,
+    borderRadius: radius.md,
     justifyContent: "center",
     alignItems: "center",
   },
+  // Heights follow the guide: 44 minimum touch target, 48 standard,
+  // 52 large (Android-ideal is 48).
   small: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    minHeight: dimensions.buttonHeight.small,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
   },
   medium: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    minHeight: dimensions.buttonHeight.medium,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
   },
   large: {
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+    minHeight: dimensions.buttonHeight.large,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xxl,
   },
   content: {
     flexDirection: "row",
@@ -119,9 +127,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   iconLeft: {
-    marginRight: 8,
+    marginRight: spacing.sm,
   },
   iconRight: {
-    marginLeft: 8,
+    marginLeft: spacing.sm,
   },
 });

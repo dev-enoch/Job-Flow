@@ -6,6 +6,11 @@ import { ThemeColors } from "../constants/colors";
 import { MotiView } from "moti";
 import Text from "../components/ui/Text";
 import Button from "../components/ui/Button";
+import {
+  motion,
+  radius,
+  spacing,
+} from "../constants/design-tokens";
 
 export default function NotFoundScreen() {
   const { theme } = useTheme();
@@ -30,12 +35,12 @@ export default function NotFoundScreen() {
         <MotiView
           from={{ opacity: 0, translateY: 20 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", duration: 500, delay: 100 }}
+          transition={{ type: "timing", duration: motion.slow, delay: 100 }}
           style={styles.textContainer}
         >
-          <Text style={styles.title}>404</Text>
-          <Text style={styles.subtitle}>Looks like you're lost in space.</Text>
-          <Text style={styles.description}>
+          <Text variant="display" weight="bold" style={styles.title}>404</Text>
+          <Text variant="h3" weight="bold" style={styles.subtitle}>Looks like you're lost in space.</Text>
+          <Text variant="body" color="secondary" style={styles.description}>
             The screen you are looking for doesn't exist or has been moved.
           </Text>
         </MotiView>
@@ -43,7 +48,7 @@ export default function NotFoundScreen() {
         <MotiView
           from={{ opacity: 0, translateY: 20 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", duration: 500, delay: 200 }}
+          transition={{ type: "timing", duration: motion.slow, delay: 200 }}
         >
           <Button
             title="Return to Dashboard"
@@ -63,16 +68,16 @@ const createStyles = (theme: ThemeColors) =>
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
-      padding: 24,
+      padding: spacing.xxl,
       backgroundColor: theme.background,
     },
     iconContainer: {
-      marginBottom: 32,
+      marginBottom: spacing.xxxl,
     },
     iconBackground: {
       width: 120,
       height: 120,
-      borderRadius: 60,
+      borderRadius: radius.full,
       backgroundColor: theme.errorLight,
       justifyContent: "center",
       alignItems: "center",
@@ -84,29 +89,22 @@ const createStyles = (theme: ThemeColors) =>
     },
     textContainer: {
       alignItems: "center",
-      marginBottom: 40,
+      marginBottom: spacing.huge,
     },
     title: {
-      fontSize: 48,
-      fontWeight: "800",
       color: theme.error,
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     },
     subtitle: {
-      fontSize: 20,
-      fontWeight: "600",
       color: theme.text.primary,
-      marginBottom: 12,
+      marginBottom: spacing.md,
     },
     description: {
-      fontSize: 16,
-      color: theme.text.secondary,
       textAlign: "center",
       maxWidth: 280,
-      lineHeight: 24,
     },
     button: {
       minWidth: 220,
-      borderRadius: 30,
+      borderRadius: radius.xxl,
     },
   });

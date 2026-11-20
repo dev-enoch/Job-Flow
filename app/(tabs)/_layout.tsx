@@ -1,6 +1,7 @@
 import { Redirect, Tabs } from "expo-router";
 import { useEffect, useState } from "react";
-import { Modal, Platform, StyleSheet } from "react-native";
+import { Modal, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Home, Briefcase, PieChart, Settings } from "lucide-react-native";
 import { useTheme } from "../../context/themeContext";
@@ -8,10 +9,12 @@ import { ThemeColors } from "../../constants/colors";
 import { StatusBar } from "expo-status-bar";
 import Onboarding from "../../components/onBoarding";
 import logger from "../../utils/logger";
+import { dimensions, spacing } from "../../constants/design-tokens";
 
 export default function TabLayout() {
   const { theme, isDarkMode } = useTheme();
   const styles = createStyles(theme);
+  const insets = useSafeAreaInsets();
 
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -49,7 +52,15 @@ export default function TabLayout() {
         screenOptions={{
           tabBarActiveTintColor: theme.primary,
           tabBarInactiveTintColor: theme.text.secondary,
-          tabBarStyle: styles.tabBar,
+          // Guide: tab bar 64 + bottom safe area, 22–24 icons, 10–12 labels.
+          tabBarStyle: {
+            backgroundColor: theme.background,
+            borderTopWidth: 1,
+            borderTopColor: theme.divider,
+            paddingTop: spacing.sm,
+            paddingBottom: insets.bottom,
+            height: dimensions.tabBarHeight + insets.bottom,
+          },
           tabBarLabelStyle: styles.tabBarLabel,
           headerShown: false,
           tabBarShowLabel: true,
@@ -61,8 +72,8 @@ export default function TabLayout() {
           name="dashboard"
           options={{
             title: "Dashboard",
-            tabBarIcon: ({ color, size }) => (
-              <Briefcase color={color} size={size} />
+            tabBarIcon: ({ color }) => (
+              <Briefcase color={color} size={dimensions.tabIconSize} />
             ),
           }}
         />
@@ -70,15 +81,17 @@ export default function TabLayout() {
           name="index"
           options={{
             title: "Applications",
-            tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+            tabBarIcon: ({ color }) => (
+              <Home color={color} size={dimensions.tabIconSize} />
+            ),
           }}
         />
         <Tabs.Screen
           name="insights"
           options={{
             title: "Insights",
-            tabBarIcon: ({ color, size }) => (
-              <PieChart color={color} size={size} />
+            tabBarIcon: ({ color }) => (
+              <PieChart color={color} size={dimensions.tabIconSize} />
             ),
           }}
         />
@@ -86,8 +99,8 @@ export default function TabLayout() {
           name="settings"
           options={{
             title: "Settings",
-            tabBarIcon: ({ color, size }) => (
-              <Settings color={color} size={size} />
+            tabBarIcon: ({ color }) => (
+              <Settings color={color} size={dimensions.tabIconSize} />
             ),
           }}
         />
@@ -107,17 +120,9 @@ export default function TabLayout() {
 
 const createStyles = (theme: ThemeColors) =>
   StyleSheet.create({
-    tabBar: {
-      backgroundColor: theme.background,
-      borderTopWidth: 0.2,
-      borderTopColor: theme.border,
-      paddingTop: 4,
-      paddingBottom: Platform.OS === "ios" ? 24 : 8,
-      height: Platform.OS === "ios" ? 80 : 60,
-    },
     tabBarLabel: {
-      fontSize: 12,
+      fontSize: dimensions.tabLabelSize,
       fontWeight: "500",
-      marginBottom: 4,
+      fontFamily: "Inter-Medium",
     },
   });

@@ -1,16 +1,13 @@
 import React from "react";
-import {
-  Modal,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-} from "react-native";
+import { View, StyleSheet } from "react-native";
 import { useTheme } from "../context/themeContext";
-import { MotiView } from "moti";
-import { Trash2, X } from "lucide-react-native";
+import { Trash2, TriangleAlert } from "lucide-react-native";
 import Text from "./ui/Text";
 import Button from "./ui/Button";
+import BottomSheet from "./ui/BottomSheet";
+import IconButton from "./ui/IconButton";
+import { X } from "lucide-react-native";
+import { radius, spacing } from "../constants/design-tokens";
 
 interface DeleteJobDialogProps {
   visible: boolean;
@@ -27,107 +24,73 @@ export default function DeleteJobDialogue({
   const styles = createStyles(theme);
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-      onRequestClose={onDismiss}
-    >
-      <TouchableWithoutFeedback onPress={onDismiss}>
-        <View style={styles.backdrop}>
-          <TouchableWithoutFeedback>
-            <MotiView
-              from={{ opacity: 0, scale: 0.92, translateY: 20 }}
-              animate={{ opacity: 1, scale: 1, translateY: 0 }}
-              exit={{ opacity: 0, scale: 0.92 }}
-              transition={{ type: "spring", stiffness: 120, damping: 18 }}
-              style={styles.sheet}
-            >
-              {/* Close button */}
-              <TouchableOpacity style={styles.closeBtn} onPress={onDismiss}>
-                <X size={18} color={theme.text.secondary} />
-              </TouchableOpacity>
+    <BottomSheet visible={visible} onDismiss={onDismiss}>
+      <View style={styles.content}>
+        {/* Close button */}
+        <IconButton variant="filled" size={36} onPress={onDismiss} style={styles.closeBtn}>
+          <X size={18} color={theme.text.secondary} />
+        </IconButton>
 
-              {/* Danger icon */}
-              <View style={styles.iconCircle}>
-                <Trash2 size={32} color={theme.error} />
-              </View>
-
-              {/* Text */}
-              <Text variant="h3" weight="bold" align="center" style={styles.title}>
-                Delete Application?
-              </Text>
-              <Text color="secondary" align="center" style={styles.message}>
-                This job application will be permanently removed. This action{" "}
-                <Text weight="bold" style={{ color: theme.error }}>
-                  cannot be undone.
-                </Text>
-              </Text>
-
-              {/* Danger warning strip */}
-              <View style={styles.warningStrip}>
-                <Text variant="caption" style={styles.warningText}>
-                  ⚠️  All notes, follow-up dates, and contact info will be lost.
-                </Text>
-              </View>
-
-              {/* Actions */}
-              <View style={styles.actions}>
-                <Button
-                  title="Keep It"
-                  variant="outline"
-                  onPress={onDismiss}
-                  style={styles.cancelBtn}
-                />
-                <Button
-                  title="Delete"
-                  onPress={onConfirm}
-                  style={[styles.confirmBtn, { backgroundColor: theme.error }]}
-                />
-              </View>
-            </MotiView>
-          </TouchableWithoutFeedback>
+        {/* Danger icon */}
+        <View style={styles.iconCircle}>
+          <Trash2 size={32} color={theme.error} />
         </View>
-      </TouchableWithoutFeedback>
-    </Modal>
+
+        {/* Text */}
+        <Text variant="h3" weight="bold" align="center" style={styles.title}>
+          Delete Application?
+        </Text>
+        <Text color="secondary" align="center" style={styles.message}>
+          This job application will be permanently removed. This action{" "}
+          <Text weight="bold" style={{ color: theme.error }}>
+            cannot be undone.
+          </Text>
+        </Text>
+
+        {/* Danger warning strip */}
+        <View style={styles.warningStrip}>
+          <TriangleAlert size={16} color={theme.warning} />
+          <Text variant="caption" style={styles.warningText}>
+            All notes, follow-up dates, and contact info will be lost.
+          </Text>
+        </View>
+
+        {/* Actions */}
+        <View style={styles.actions}>
+          <Button
+            title="Keep It"
+            variant="outline"
+            onPress={onDismiss}
+            style={styles.actionBtn}
+          />
+          <Button
+            title="Delete"
+            onPress={onConfirm}
+            style={[styles.actionBtn, { backgroundColor: theme.error }]}
+          />
+        </View>
+      </View>
+    </BottomSheet>
   );
 }
 
 const createStyles = (theme: any) =>
   StyleSheet.create({
-    backdrop: {
-      flex: 1,
-      backgroundColor: "rgba(0,0,0,0.5)",
-      justifyContent: "flex-end",
-    },
-    sheet: {
-      backgroundColor: theme.card,
-      borderTopLeftRadius: 28,
-      borderTopRightRadius: 28,
-      paddingHorizontal: 24,
-      paddingTop: 24,
-      paddingBottom: 40,
+    content: {
       alignItems: "center",
     },
     closeBtn: {
       alignSelf: "flex-end",
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: theme.primaryLight,
-      justifyContent: "center",
-      alignItems: "center",
-      marginBottom: 16,
+      marginBottom: spacing.lg,
     },
     iconCircle: {
       width: 80,
       height: 80,
-      borderRadius: 40,
+      borderRadius: radius.full,
       backgroundColor: theme.errorLight,
       justifyContent: "center",
       alignItems: "center",
-      marginBottom: 20,
+      marginBottom: spacing.xl,
       shadowColor: theme.error,
       shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 0.15,
@@ -135,38 +98,38 @@ const createStyles = (theme: any) =>
       elevation: 4,
     },
     title: {
-      marginBottom: 10,
+      marginBottom: spacing.sm,
       color: theme.text.primary,
     },
     message: {
-      marginBottom: 16,
+      marginBottom: spacing.lg,
       lineHeight: 22,
       maxWidth: 300,
       fontSize: 15,
     },
     warningStrip: {
       width: "100%",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
       backgroundColor: theme.warningLight,
-      borderRadius: 10,
-      paddingVertical: 10,
-      paddingHorizontal: 14,
-      marginBottom: 28,
+      borderRadius: radius.lg,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.xxl,
     },
     warningText: {
+      flex: 1,
       color: theme.warning,
       lineHeight: 18,
     },
     actions: {
       flexDirection: "row",
-      gap: 12,
+      gap: spacing.md,
       width: "100%",
     },
-    cancelBtn: {
+    actionBtn: {
       flex: 1,
-      borderRadius: 20,
-    },
-    confirmBtn: {
-      flex: 1,
-      borderRadius: 20,
+      borderRadius: radius.xl,
     },
   });

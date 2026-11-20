@@ -7,12 +7,13 @@ import {
   View,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Input from "../../components/ui/Input";
 import Text from "../../components/ui/Text";
 import Button from "../../components/ui/Button";
+import ScreenHeader from "../../components/ui/ScreenHeader";
 import logger from "../../utils/logger";
 import Card from "../../components/ui/Card";
 import { useTheme } from "../../context/themeContext";
@@ -27,7 +28,6 @@ import {
   Globe,
   User,
   Mail,
-  ArrowLeft,
   Save,
   MessageSquareText
 } from "lucide-react-native";
@@ -38,6 +38,12 @@ import { Picker } from "@react-native-picker/picker";
 import { ThemeColors } from "../../constants/colors";
 import { useJobs } from "../../context/jobContext";
 import { MotiView } from "moti";
+import {
+  dimensions,
+  motion,
+  radius,
+  spacing,
+} from "../../constants/design-tokens";
 
 const jobSchema = z.object({
   company: z.string().min(1, "Company name is required"),
@@ -66,7 +72,6 @@ export default function NewJobModal() {
     handleSubmit,
     formState: { errors, isSubmitting },
     setValue,
-    register,
     watch,
   } = useForm<JobFormData>({
     resolver: zodResolver(jobSchema),
@@ -98,7 +103,9 @@ export default function NewJobModal() {
   const onChangeDate = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (selectedDate) {
-      setValue("dateApplied", selectedDate.toDateString());
+      // Store an ISO date string (yyyy-MM-dd), matching the follow-up picker
+      // and the form default, so submit-time parsing is unambiguous.
+      setValue("dateApplied", selectedDate.toISOString().substring(0, 10));
     }
   };
 
@@ -126,18 +133,9 @@ export default function NewJobModal() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <Button
-          variant="outline"
-          title=""
-          leftIcon={<ArrowLeft size={20} color={theme.text.primary} />}
-          onPress={() => router.back()}
-          style={styles.backBtn}
-        />
-        <Text variant="h3" weight="bold" style={styles.headerTitle}>Add Job</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    // Root layout owns the top inset; this screen owns the bottom one.
+    <SafeAreaView edges={["bottom"]} style={styles.safeArea}>
+      <ScreenHeader title="Add Job" onBack={() => router.back()} />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -151,7 +149,7 @@ export default function NewJobModal() {
           <MotiView
             from={{ opacity: 0, translateY: 15 }}
             animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: "timing", duration: 500 }}
+            transition={{ type: "timing", duration: motion.slow }}
           >
             <Card variant="elevated" style={styles.formCard}>
               <View style={styles.sectionTitleWrapper}>
@@ -170,7 +168,6 @@ export default function NewJobModal() {
                     onBlur={onBlur}
                     error={errors.company?.message}
                     leftIcon={<Building2 size={20} color={theme.text.secondary} />}
-                    style={styles.inputSpacing}
                   />
                 )}
               />
@@ -186,7 +183,6 @@ export default function NewJobModal() {
                     onBlur={onBlur}
                     error={errors.role?.message}
                     leftIcon={<BriefcaseIcon size={20} color={theme.text.secondary} />}
-                    style={styles.inputSpacing}
                   />
                 )}
               />
@@ -202,7 +198,6 @@ export default function NewJobModal() {
                     onBlur={onBlur}
                     error={errors.location?.message}
                     leftIcon={<MapPin size={20} color={theme.text.secondary} />}
-                    style={styles.inputSpacing}
                   />
                 )}
               />
@@ -218,7 +213,6 @@ export default function NewJobModal() {
                     onBlur={onBlur}
                     error={errors.salary?.message}
                     leftIcon={<DollarSign size={20} color={theme.text.secondary} />}
-                    style={styles.inputSpacing}
                   />
                 )}
               />
@@ -236,7 +230,6 @@ export default function NewJobModal() {
                 leftIcon={<Calendar size={20} color={theme.text.secondary} />}
                 showSoftInputOnFocus={false}
                 pointerEvents="none"
-                style={styles.inputSpacing}
               />
 
               {showDatePicker && (
@@ -254,7 +247,7 @@ export default function NewJobModal() {
                 name="status"
                 render={({ field: { onChange, value } }) => (
                   <View style={styles.inputWrapper}>
-                    <Text variant="label" style={styles.label}>
+                    <Text variant="label" weight="medium" color="secondary" style={styles.label}>
                       Status
                     </Text>
                     <View style={styles.pickerContainer}>
@@ -296,7 +289,6 @@ export default function NewJobModal() {
                     autoCapitalize="none"
                     keyboardType="url"
                     leftIcon={<Globe size={20} color={theme.text.secondary} />}
-                    style={styles.inputSpacing}
                   />
                 )}
               />
@@ -316,7 +308,7 @@ export default function NewJobModal() {
                     title="Clear Follow-up Date"
                     onPress={() => setValue("followUpDate", "")}
                     variant="outline"
-                    style={{ marginTop: 8 }}
+                    style={{ marginTop: spacing.sm }}
                   />
                 )}
 
@@ -346,7 +338,6 @@ export default function NewJobModal() {
                     onBlur={onBlur}
                     error={errors.contactPerson?.message}
                     leftIcon={<User size={20} color={theme.text.secondary} />}
-                    style={styles.inputSpacing}
                   />
                 )}
               />
@@ -364,7 +355,6 @@ export default function NewJobModal() {
                     autoCapitalize="none"
                     keyboardType="email-address"
                     leftIcon={<Mail size={20} color={theme.text.secondary} />}
-                    style={styles.inputSpacing}
                   />
                 )}
               />
@@ -397,7 +387,6 @@ export default function NewJobModal() {
                 style={styles.saveButton}
               />
             </View>
-            <View style={{ height: 40 }} />
           </MotiView>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -411,81 +400,59 @@ const createStyles = (theme: ThemeColors) =>
       flex: 1,
       backgroundColor: theme.background,
     },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.border + "50",
-    },
-    backBtn: {
-      width: 44,
-      height: 44,
-      paddingHorizontal: 0,
-      justifyContent: 'center',
-      borderRadius: 22,
-    },
-    headerTitle: {
-      color: theme.text.primary,
-    },
     container: {
       flex: 1,
       backgroundColor: theme.background,
     },
     contentContainer: {
-      padding: 16,
-      paddingBottom: 40,
+      padding: dimensions.screenPadding,
+      paddingBottom: spacing.xxxl,
     },
     formCard: {
-      padding: 20,
-      marginBottom: 20,
+      padding: dimensions.cardPadding,
+      marginBottom: dimensions.sectionGap,
     },
     sectionTitleWrapper: {
-      marginBottom: 20,
-      paddingBottom: 10,
+      marginBottom: spacing.lg,
+      paddingBottom: spacing.md,
       borderBottomWidth: 1,
-      borderBottomColor: theme.border + "50",
+      borderBottomColor: theme.divider + "80",
     },
     inputSpacing: {
-      marginBottom: 20,
+      marginBottom: spacing.lg,
     },
     textArea: {
       height: 100,
       textAlignVertical: "top",
-      paddingTop: 8,
+      paddingTop: spacing.sm,
     },
     buttonsContainer: {
       flexDirection: "row",
       justifyContent: "space-between",
-      marginTop: 8,
+      marginTop: spacing.sm,
     },
     saveButton: {
       flex: 1,
-      borderRadius: 24,
-      height: 54,
+      borderRadius: radius.xxl,
+      height: dimensions.buttonHeight.large,
     },
     inputWrapper: {
-      marginBottom: 20,
+      marginBottom: spacing.lg,
     },
     label: {
-      color: theme.text.primary,
-      marginBottom: 8,
-      fontSize: 15,
-      fontWeight: '600',
+      marginBottom: spacing.sm,
     },
     pickerContainer: {
       borderWidth: 1,
       borderColor: theme.border,
-      borderRadius: 12,
+      borderRadius: radius.lg,
       backgroundColor: theme.background,
       overflow: "hidden",
     },
     picker: {
       color: theme.text.primary,
-      height: 52,
-      paddingHorizontal: 10,
+      height: dimensions.inputHeight,
+      paddingHorizontal: spacing.sm,
     },
     pickerItem: {
       color: theme.text.primary,
